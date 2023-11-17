@@ -1,7 +1,7 @@
-﻿namespace FlawlessChips;
+namespace FlawlessChips;
 
 internal sealed record SegmentDefinition(
-    NodeId Node,
+    NodeId NodeId,
     bool Pullup,
     byte Unknown,
     int Area);

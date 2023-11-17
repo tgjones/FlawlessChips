@@ -53,7 +53,7 @@ public sealed class ChipSimulator
         var maximumId = 0;
         foreach (var segmentDefinition in segmentDefinitions)
         {
-            maximumId = Math.Max(maximumId, segmentDefinition.Node);
+            maximumId = Math.Max(maximumId, segmentDefinition.NodeId);
         }
 
         _nodes = new Node[maximumId + 1];
@@ -160,13 +160,13 @@ public sealed class ChipSimulator
     {
         foreach (var segmentDefinition in segmentDefinitions)
         {
-            var w = segmentDefinition.Node;
-            ref var node = ref _nodes[w];
+            var nodeId = segmentDefinition.NodeId;
+            ref var node = ref _nodes[nodeId];
             if (node.NodeId == NullNodeId)
             {
                 node = new Node
                 {
-                    NodeId = w,
+                    NodeId = nodeId,
                     Pullup = segmentDefinition.Pullup,
                     State = false,
                     Area = 0,
@@ -174,9 +174,9 @@ public sealed class ChipSimulator
                     C1C2s = []
                 };
             }
-            if (w == _nodeGnd) continue;
-            if (w == _nodePwr && segmentDefinition.Unknown == 4) continue;
-            if (w == _nodePwr) continue;
+
+            if (nodeId == _nodeGnd) continue;
+            if (nodeId == _nodePwr) continue;
 
             node.Area += segmentDefinition.Area;
         }
@@ -186,24 +186,27 @@ public sealed class ChipSimulator
     {
         for (var i = 0; i < transistorDefinitions.Count; i++)
         {
-            var tdef = transistorDefinitions[i];
+            var transistorDefinition = transistorDefinitions[i];
 
-            var gate = tdef.Gate;
-            var c1 = tdef.C1;
-            var c2 = tdef.C2;
+            var gate = transistorDefinition.Gate;
+            var c1 = transistorDefinition.C1;
+            var c2 = transistorDefinition.C2;
+
             if (c1 == _nodeGnd) { c1 = c2; c2 = _nodeGnd; }
             if (c1 == _nodePwr) { c1 = c2; c2 = _nodePwr; }
-            var trans = new Transistor
+
+            var transistor = new Transistor
             {
                 On = false,
-                Gate = tdef.Gate,
+                Gate = gate,
                 C1 = c1,
                 C2 = c2,
             };
-            _nodes[gate].Gates.Add(trans);
-            _nodes[c1].C1C2s.Add(trans);
-            _nodes[c2].C1C2s.Add(trans);
-            _transistors[i] = trans;
+
+            _nodes[gate].Gates.Add(transistor);
+            _nodes[c1].C1C2s.Add(transistor);
+            _nodes[c2].C1C2s.Add(transistor);
+            _transistors[i] = transistor;
         }
     }
 
