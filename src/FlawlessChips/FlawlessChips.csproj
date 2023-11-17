@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Description>FlawlessChips is a collection of gate-level simulations of 8-bit chips.</Description>
+    <PackageId>FlawlessChips</PackageId>
+    <Copyright>Tim Jones</Copyright>
+    <Authors>Tim Jones</Authors>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <PackageTags>simulation;emulation;6502;2C02;ppu</PackageTags>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/tgjones/FlawlessChips</PackageProjectUrl>
+    <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../img/logo.png" Pack="true" PackagePath="" />
+    <None Include="../../readme.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="**/*.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MinVer" Version="4.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>
