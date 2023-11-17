@@ -1,4 +1,6 @@
-# FlawlessChips
+# FlawlessChips [![Build Status](https://github.com/tgjones/FlawlessChips/workflows/ci/badge.svg?branch=main)](https://github.com/tgjones/FlawlessChips/actions)  [![Coverage Status](https://coveralls.io/repos/github/tgjones/FlawlessChips/badge.svg?branch=main)](https://coveralls.io/github/tgjones/FlawlessChips?branch=main)  [![NuGet](https://img.shields.io/nuget/v/FlawlessChips.svg)](https://www.nuget.org/packages/FlawlessChips/)
+
+<img align="right" width="150px" height="150px" src="img/logo.png">
 
 FlawlessChips is a C# library that provides gate-level simulation of various 8-bit chips.
 
