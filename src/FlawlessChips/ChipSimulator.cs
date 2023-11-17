@@ -612,4 +612,27 @@ public sealed class ChipSimulator
 
         SetNodes(nodeIds, values);
     }
+
+    // TODO: Check whether this can be done via SetNode. Is it important that we don't
+    // change the pullup / pulldown values for these "memory" nodes?
+    public void SetBit(NodeId n0, NodeId n1)
+    {
+        foreach (var transistor in _nodes[n0].Gates)
+        {
+            transistor.On = true;
+        }
+
+        foreach (var transistor in _nodes[n1].Gates)
+        {
+            transistor.On = false;
+        }
+
+        _nodes[n0].State = true;
+        _nodes[n1].State = false;
+
+        _recalcListOut.Add(n0);
+        _recalcListOut.Add(n1);
+
+        RecalcNodeList();
+    }
 }

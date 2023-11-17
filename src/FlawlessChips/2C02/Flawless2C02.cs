@@ -73,4 +73,22 @@ public sealed partial class Flawless2C02
     public ushort GetHPos() => ChipSimulator.GetNodeGroup<ushort>(hpos);
 
     public ushort GetVPos() => ChipSimulator.GetNodeGroup<ushort>(vpos);
+
+    public void PaletteWrite(byte address, byte value)
+    {
+        for (var i = 0; i < 6; i++)
+        {
+            var n0 = PaletteNodes[address][i][0];
+            var n1 = PaletteNodes[address][i][1];
+
+            if ((value & (1 << i)) != 0)
+            {
+                ChipSimulator.SetBit(n1, n0);
+            }
+            else
+            {
+                ChipSimulator.SetBit(n0, n1);
+            }
+        }
+    }
 }
