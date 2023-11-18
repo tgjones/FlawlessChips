@@ -8,7 +8,7 @@ using System.Numerics;
 
 namespace FlawlessChips;
 
-public sealed class ChipSimulator
+public class ChipSimulator
 {
     private const NodeId NullNodeId = NodeId.MaxValue;
 
