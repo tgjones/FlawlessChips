@@ -232,11 +232,6 @@ public sealed class ChipSimulator
         }
     }
 
-    public bool IsNodeHigh(NodeId nodeId)
-    {
-        return _nodes[nodeId].State;
-    }
-
     public void RecalcNodeList()
     {
         for (var j = 0; j < 100; j++) // Prevent infinite loops
@@ -580,6 +575,11 @@ public sealed class ChipSimulator
         }
 
         RecalcNodeList();
+    }
+
+    public bool IsNodeHigh(NodeId nodeId)
+    {
+        return _nodes[nodeId].State;
     }
 
     public T GetNodeGroup<T>(Span<NodeId> nodeIds)
