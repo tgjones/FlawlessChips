@@ -18,10 +18,10 @@ public sealed partial class Flawless2C02
     public void Startup()
     {
         // Assert RESET and initialize other inputs
-        ChipSimulator.SetNode(res, false);
-        ChipSimulator.SetNode(clk0, false);
-        ChipSimulator.SetNode(io_ce, true);
-        ChipSimulator.SetNode(@int, true);
+        ChipSimulator.SetNode(res, NodeValue.PulledLow);
+        ChipSimulator.SetNode(clk0, NodeValue.PulledLow);
+        ChipSimulator.SetNode(io_ce, NodeValue.PulledHigh);
+        ChipSimulator.SetNode(@int, NodeValue.PulledHigh);
 
         // Recalculate all nodes until the chip stabilizes
         ChipSimulator.StabilizeChip();
@@ -29,19 +29,19 @@ public sealed partial class Flawless2C02
         // Run for 4 cycles so that RESET fully takes effect
         for (var i = 0; i < 4; i++)
         {
-            ChipSimulator.SetNode(clk0, true);
-            ChipSimulator.SetNode(clk0, false);
+            ChipSimulator.SetNode(clk0, NodeValue.PulledHigh);
+            ChipSimulator.SetNode(clk0, NodeValue.PulledLow);
         }
 
         // Deassert RESET so the chip can continue running normally
-        ChipSimulator.SetNode(res, true);
+        ChipSimulator.SetNode(res, NodeValue.PulledHigh);
     }
 
     public void Step()
     {
         var clk = ChipSimulator.IsNodeHigh(clk0);
 
-        ChipSimulator.SetNode(clk0, !clk);
+        ChipSimulator.SetNode(clk0, clk ? NodeValue.PulledLow : NodeValue.PulledHigh);
     }
 
     public bool GetPinALE() => ChipSimulator.IsNodeHigh(ale);
@@ -58,9 +58,9 @@ public sealed partial class Flawless2C02
 
     public void SetPinsDB(byte value) => ChipSimulator.SetNodeGroup(db, value);
 
-    public void SetPinIO_CE(bool value) => ChipSimulator.SetNode(io_ce, value);
+    public void SetPinIO_CE(NodeValue value) => ChipSimulator.SetNode(io_ce, value);
 
-    public void SetPinIO_RW(bool value) => ChipSimulator.SetNode(io_rw, value);
+    public void SetPinIO_RW(NodeValue value) => ChipSimulator.SetNode(io_rw, value);
 
     public byte GetPinsIO_AB() => ChipSimulator.GetNodeGroup<byte>(io_ab);
 

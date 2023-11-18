@@ -120,7 +120,7 @@ namespace FlawlessChips.Tests
                     else
                     {
                         _counter = _current & 0x7FF;
-                        _chip.ChipSimulator.SetNodesFloating(io_db);
+                        _chip.ChipSimulator.SetNodes(io_db, NodeValue.Floating);
                     }
                 }
                 if (_counter > 0)
@@ -134,17 +134,17 @@ namespace FlawlessChips.Tests
                         _chip.SetPinsIO_AB(a);
                         if (rw)
                         {
-                            _chip.ChipSimulator.SetNodesFloating(io_db);
+                            _chip.ChipSimulator.SetNodes(io_db, NodeValue.Floating);
                         }
                         else
                         {
                             _chip.SetPinsIO_DB(d);
                         }
-                        _chip.SetPinIO_RW(rw);
+                        _chip.SetPinIO_RW(rw ? NodeValue.PulledHigh : NodeValue.PulledLow);
                     }
                     if ((_counter == 16) && ce)
                     {
-                        _chip.SetPinIO_CE(false);
+                        _chip.SetPinIO_CE(NodeValue.PulledLow);
                     }
                     if (_counter == 1)
                     {
@@ -154,7 +154,7 @@ namespace FlawlessChips.Tests
                             // store result in the test program
                             //cpucmd_setCellValue(cpucmd_address * 8 + 5, d);
                         }
-                        _chip.SetPinIO_CE(true);
+                        _chip.SetPinIO_CE(NodeValue.PulledHigh);
                     }
                     _counter--;
                     if (_counter == 0)

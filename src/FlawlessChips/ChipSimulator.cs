@@ -544,10 +544,10 @@ public sealed class ChipSimulator
         return result.ToString();
     }
 
-    public void SetNode(NodeId nodeId, bool value)
+    public void SetNode(NodeId nodeId, NodeValue value)
     {
         Span<NodeId> nodeIds = stackalloc NodeId[1];
-        Span<bool> values = stackalloc bool[1];
+        Span<NodeValue> values = stackalloc NodeValue[1];
 
         nodeIds[0] = nodeId;
         values[0] = value;
@@ -555,30 +555,26 @@ public sealed class ChipSimulator
         SetNodes(nodeIds, values);
     }
 
-    public void SetNodes(Span<NodeId> nodeIds, Span<bool> values)
+    public void SetNodes(Span<NodeId> nodeIds, NodeValue value)
     {
+        Span<NodeValue> values = stackalloc NodeValue[nodeIds.Length];
+
         for (var i = 0; i < nodeIds.Length; i++)
         {
-            var nodeId = nodeIds[i];
-            ref var node = ref _nodes[nodeId];
-
-            var value = values[i];
-            node.Pulled = value ? NodeValue.PulledHigh : NodeValue.PulledLow;
-
-            _recalcListOut.Add(nodeId);
+            values[i] = value;
         }
 
-        RecalcNodeList();
+        SetNodes(nodeIds, values);
     }
 
-    public void SetNodesFloating(Span<NodeId> nodeIds)
+    public void SetNodes(Span<NodeId> nodeIds, Span<NodeValue> values)
     {
         for (var i = 0; i < nodeIds.Length; i++)
         {
             var nodeId = nodeIds[i];
             ref var node = ref _nodes[nodeId];
 
-            node.Pulled = NodeValue.Floating;
+            node.Pulled = values[i];
 
             _recalcListOut.Add(nodeId);
         }
@@ -600,13 +596,15 @@ public sealed class ChipSimulator
     public void SetNodeGroup<T>(Span<NodeId> nodeIds, T value)
         where T : IUnsignedNumber<T>, IModulusOperators<T, T, T>
     {
-        Span<bool> values = stackalloc bool[nodeIds.Length];
+        Span<NodeValue> values = stackalloc NodeValue[nodeIds.Length];
 
         var two = T.CreateChecked(2);
 
         for (var i = 0; i < nodeIds.Length; i++)
         {
-            values[i] = (value % two) != T.Zero;
+            values[i] = (value % two) != T.Zero
+                ? NodeValue.PulledHigh
+                : NodeValue.PulledLow;
             value /= two;
         }
 
