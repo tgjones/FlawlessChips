@@ -20,9 +20,9 @@ namespace FlawlessChips.Tests
             {
                 cpuCommands.Next();
 
-                chip.Step();
+                chip.SetNode(clk0, chip.IsNodeHigh(clk0) ? NodeValue.PulledLow : NodeValue.PulledHigh);
 
-                if (chip.GetVPos() == 240)
+                if (chip.GetNodeGroup<ushort>(vpos) == 240)
                 {
                     break;
                 }
@@ -48,9 +48,9 @@ namespace FlawlessChips.Tests
 
             while (true)
             {
-                chip.Step();
+                chip.SetNode(clk0, chip.IsNodeHigh(clk0) ? NodeValue.PulledLow : NodeValue.PulledHigh);
 
-                if (chip.GetVPos() == 0)
+                if (chip.GetNodeGroup<ushort>(vpos) == 0)
                 {
                     break;
                 }
@@ -131,30 +131,30 @@ namespace FlawlessChips.Tests
                     var d = (byte)(_current & 0xFF);
                     if ((_counter == 24) && ce)
                     {
-                        _chip.SetPinsIO_AB(a);
+                        _chip.SetNodeGroup(io_ab, a);
                         if (rw)
                         {
                             _chip.SetNodes(io_db, NodeValue.Floating);
                         }
                         else
                         {
-                            _chip.SetPinsIO_DB(d);
+                            _chip.SetNodeGroup(io_db, d);
                         }
-                        _chip.SetPinIO_RW(rw ? NodeValue.PulledHigh : NodeValue.PulledLow);
+                        _chip.SetNode(io_rw, rw ? NodeValue.PulledHigh : NodeValue.PulledLow);
                     }
                     if ((_counter == 16) && ce)
                     {
-                        _chip.SetPinIO_CE(NodeValue.PulledLow);
+                        _chip.SetNode(io_ce, NodeValue.PulledLow);
                     }
                     if (_counter == 1)
                     {
                         if (rw)
                         {
-                            d = _chip.GetPinsIO_DB();
+                            d = _chip.GetNodeGroup<byte>(io_db);
                             // store result in the test program
                             //cpucmd_setCellValue(cpucmd_address * 8 + 5, d);
                         }
-                        _chip.SetPinIO_CE(NodeValue.PulledHigh);
+                        _chip.SetNode(io_ce, NodeValue.PulledHigh);
                     }
                     _counter--;
                     if (_counter == 0)
