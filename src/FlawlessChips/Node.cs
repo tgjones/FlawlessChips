@@ -5,10 +5,16 @@ namespace FlawlessChips;
 public struct Node
 {
     public NodeId NodeId;
-    public bool Pullup;
-    public bool Pulldown;
+    public NodeValue Pulled;
     public bool State;
     public List<Transistor> Gates;
     public List<Transistor> C1C2s;
     public int Area;
+}
+
+public enum NodeValue
+{
+    PulledHigh,
+    PulledLow,
+    Floating,
 }

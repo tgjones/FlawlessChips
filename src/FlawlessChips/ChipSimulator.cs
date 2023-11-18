@@ -167,7 +167,9 @@ public sealed class ChipSimulator
                 node = new Node
                 {
                     NodeId = nodeId,
-                    Pullup = segmentDefinition.Pullup,
+                    Pulled = segmentDefinition.Pullup
+                        ? NodeValue.PulledHigh
+                        : NodeValue.Floating,
                     State = false,
                     Area = 0,
                     Gates = [],
@@ -362,12 +364,12 @@ public sealed class ChipSimulator
 
         ref readonly var node = ref _nodes[nodeId];
 
-        if (node.Pullup)
+        if (node.Pulled == NodeValue.PulledHigh)
         {
             _groupState |= GroupState.ContainsPullup;
         }
 
-        if (node.Pulldown)
+        if (node.Pulled == NodeValue.PulledLow)
         {
             _groupState |= GroupState.ContainsPulldown;
         }
@@ -561,8 +563,7 @@ public sealed class ChipSimulator
             ref var node = ref _nodes[nodeId];
 
             var value = values[i];
-            node.Pullup = value;
-            node.Pulldown = !value;
+            node.Pulled = value ? NodeValue.PulledHigh : NodeValue.PulledLow;
 
             _recalcListOut.Add(nodeId);
         }
@@ -577,8 +578,7 @@ public sealed class ChipSimulator
             var nodeId = nodeIds[i];
             ref var node = ref _nodes[nodeId];
 
-            node.Pullup = false;
-            node.Pulldown = false;
+            node.Pulled = NodeValue.Floating;
 
             _recalcListOut.Add(nodeId);
         }
