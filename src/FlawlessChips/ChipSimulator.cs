@@ -581,10 +581,7 @@ public class ChipSimulator
         RecalcNodeList();
     }
 
-    public bool IsNodeHigh(NodeId nodeId)
-    {
-        return _nodes[nodeId].State == NodeValue.PulledHigh;
-    }
+    public NodeValue GetNode(NodeId nodeId) => _nodes[nodeId].State;
 
     public T GetNodeGroup<T>(Span<NodeId> nodeIds)
         where T : INumber<T>, IShiftOperators<T, int, T>
@@ -592,7 +589,7 @@ public class ChipSimulator
         var result = T.Zero;
         for (var i = 0; i < nodeIds.Length; i++)
         {
-            result += (IsNodeHigh(nodeIds[i]) ? T.One : T.Zero) << i;
+            result += (GetNode(nodeIds[i]).IsHigh() ? T.One : T.Zero) << i;
         }
         return result;
     }

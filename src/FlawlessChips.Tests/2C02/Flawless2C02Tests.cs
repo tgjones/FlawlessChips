@@ -20,7 +20,7 @@ namespace FlawlessChips.Tests
             {
                 cpuCommands.Next();
 
-                chip.SetNode(clk0, chip.IsNodeHigh(clk0) ? NodeValue.PulledLow : NodeValue.PulledHigh);
+                chip.SetNode(clk0, chip.GetNode(clk0).IsHigh() ? NodeValue.PulledLow : NodeValue.PulledHigh);
 
                 if (chip.GetNodeGroup<ushort>(vpos) == 240)
                 {
@@ -48,7 +48,7 @@ namespace FlawlessChips.Tests
 
             while (true)
             {
-                chip.SetNode(clk0, chip.IsNodeHigh(clk0) ? NodeValue.PulledLow : NodeValue.PulledHigh);
+                chip.SetNode(clk0, chip.GetNode(clk0).IsHigh() ? NodeValue.PulledLow : NodeValue.PulledHigh);
 
                 if (chip.GetNodeGroup<ushort>(vpos) == 0)
                 {
