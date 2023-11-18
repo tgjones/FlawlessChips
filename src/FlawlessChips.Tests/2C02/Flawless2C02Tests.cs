@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 
 using static FlawlessChips.Flawless2C02.NodeIds;
@@ -7,7 +8,7 @@ namespace FlawlessChips.Tests
     public class Flawless2C02Tests
     {
         [Test]
-        public void StartupStateUntilScanline240MatchesVisual2C02()
+        public void TestStartupStateUntilScanline240MatchesVisual2C02()
         {
             var chip = new Flawless2C02();
 
@@ -38,7 +39,7 @@ namespace FlawlessChips.Tests
         }
 
         [Test]
-        public void PreRenderEvenStateUntilNextFrameMatchesVisual2C02()
+        public void TestPreRenderEvenStateUntilNextFrameMatchesVisual2C02()
         {
             var chip = new Flawless2C02();
 
@@ -63,6 +64,48 @@ namespace FlawlessChips.Tests
             var actualState = chip.GetState();
 
             Assert.AreEqual(expectedState, actualState);
+        }
+
+        [Test]
+        public void TestVideoOutput()
+        {
+            var chip = new Flawless2C02();
+
+            chip.SetState(Flawless2C02.PresetStates.PreRenderEven);
+
+            chip.PaletteWrite(0x00, 0x21);
+
+            var cycle = 0;
+            while (true)
+            {
+                chip.SetNode(clk0, chip.GetNode(clk0).IsHigh() ? NodeValue.PulledLow : NodeValue.PulledHigh);
+
+                static string FormatNodeValue(NodeValue value) => value == NodeValue.PulledHigh ? "1" : "0";
+
+                var vposValue = chip.GetNodeGroup<ushort>(vpos);
+                var hposValue = chip.GetNodeGroup<ushort>(hpos);
+                var vid0Value = FormatNodeValue(chip.GetNode(vid_0));
+                var vid1Value = FormatNodeValue(chip.GetNode(vid_1));
+                var vid2Value = FormatNodeValue(chip.GetNode(vid_2));
+                var vid3Value = FormatNodeValue(chip.GetNode(vid_3));
+                var vid4Value = FormatNodeValue(chip.GetNode(vid_4));
+                var vid5Value = FormatNodeValue(chip.GetNode(vid_5));
+                var vid6Value = FormatNodeValue(chip.GetNode(vid_6));
+                var vid7Value = FormatNodeValue(chip.GetNode(vid_7));
+                var vid8Value = FormatNodeValue(chip.GetNode(vid_8));
+                var vid9Value = FormatNodeValue(chip.GetNode(vid_9));
+                var vid10Value = FormatNodeValue(chip.GetNode(vid_10));
+                var vid11Value = FormatNodeValue(chip.GetNode(vid_11));
+
+                Console.WriteLine($"{cycle:X5} {vposValue:X3} {hposValue:X3} {vid0Value} {vid1Value} {vid2Value} {vid3Value} {vid4Value} {vid5Value} {vid6Value} {vid7Value} {vid8Value} {vid9Value} {vid10Value} {vid11Value}");
+
+                if (vposValue == 0)
+                {
+                    break;
+                }
+
+                cycle++;
+            }
         }
 
         // TODO: Refactor this.
