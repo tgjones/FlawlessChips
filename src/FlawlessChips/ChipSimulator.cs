@@ -170,7 +170,7 @@ public sealed class ChipSimulator
                     Pulled = segmentDefinition.Pullup
                         ? NodeValue.PulledHigh
                         : NodeValue.Floating,
-                    State = false,
+                    State = NodeValue.Floating,
                     Area = 0,
                     Gates = [],
                     C1C2s = []
@@ -218,12 +218,12 @@ public sealed class ChipSimulator
         for (var i = 0; i < _nodes.Length; i++)
         {
             ref var node = ref _nodes[i];
-            node.State = false;
+            node.State = NodeValue.Floating;
         }
 
         // set GND and PWR to be driven high/low
-        _nodes[_nodeGnd].State = false;
-        _nodes[_nodePwr].State = true;
+        _nodes[_nodeGnd].State = NodeValue.PulledLow;
+        _nodes[_nodePwr].State = NodeValue.PulledHigh;
 
         // Turn on all transistors connected to VCC, and turn off the rest
         foreach (var transistor in _transistors)
@@ -274,7 +274,7 @@ public sealed class ChipSimulator
 
             foreach (var t in n.Gates)
             {
-                if (n.State)
+                if (n.State == NodeValue.PulledHigh)
                 {
                     TurnTransistorOn(t);
                 }
@@ -369,7 +369,7 @@ public sealed class ChipSimulator
             _groupState |= GroupState.ContainsPulldown;
         }
 
-        if (node.State)
+        if (node.State == NodeValue.PulledHigh)
         {
             _groupState |= GroupState.ContainsHi;
         }
@@ -389,7 +389,7 @@ public sealed class ChipSimulator
         }
     }
 
-    private bool GetNodeValue()
+    private NodeValue GetNodeValue()
     {
         if ((_groupState & GroupState.ContainsGnd) != 0 && (_groupState & GroupState.ContainsPwr) != 0)
         {
@@ -411,22 +411,22 @@ public sealed class ChipSimulator
 
         if ((_groupState & GroupState.ContainsGnd) != 0)
         {
-            return false;
+            return NodeValue.PulledLow;
         }
 
         if ((_groupState & GroupState.ContainsPwr) != 0)
         {
-            return true;
+            return NodeValue.PulledHigh;
         }
 
         if ((_groupState & GroupState.ContainsPullup) != 0)
         {
-            return true;
+            return NodeValue.PulledHigh;
         }
 
         if ((_groupState & GroupState.ContainsPulldown) != 0)
         {
-            return false;
+            return NodeValue.PulledLow;
         }
 
         if ((_groupState & GroupState.ContainsHi) != 0)
@@ -439,20 +439,24 @@ public sealed class ChipSimulator
 
                 // If we get here, we know that none of the nodes
                 // in the group are gnd, pwr, pullup, or pulldown.
+                switch (n.State)
+                {
+                    case NodeValue.PulledHigh:
+                        areaHi += n.Area;
+                        break;
 
-                if (n.State)
-                {
-                    areaHi += n.Area;
-                }
-                else
-                {
-                    areaLo += n.Area;
+                    case NodeValue.PulledLow:
+                    case NodeValue.Floating: // Not quite right.
+                        areaLo += n.Area;
+                        break;
                 }
             }
-            return areaHi > areaLo;
+            return areaHi > areaLo
+                ? NodeValue.PulledHigh
+                : NodeValue.PulledLow;
         }
 
-        return false;
+        return NodeValue.Floating;
     }
 
     public void StabilizeChip()
@@ -494,10 +498,10 @@ public sealed class ChipSimulator
 
             var state = c switch
             {
-                'g' => false,
-                'h' => true,
-                'v' => true,
-                'l' => false,
+                'g' => NodeValue.PulledLow,
+                'h' => NodeValue.PulledHigh,
+                'v' => NodeValue.PulledHigh,
+                'l' => NodeValue.PulledLow,
                 _ => throw new InvalidOperationException(),
             };
 
@@ -505,7 +509,7 @@ public sealed class ChipSimulator
 
             foreach (var gate in node.Gates)
             {
-                gate.On = state;
+                gate.On = state == NodeValue.PulledHigh;
             }
         }
     }
@@ -532,7 +536,7 @@ public sealed class ChipSimulator
             }
             else
             {
-                result.Append(node.State ? 'h' : 'l');
+                result.Append(node.State == NodeValue.PulledHigh ? 'h' : 'l');
             }
         }
 
@@ -579,7 +583,7 @@ public sealed class ChipSimulator
 
     public bool IsNodeHigh(NodeId nodeId)
     {
-        return _nodes[nodeId].State;
+        return _nodes[nodeId].State == NodeValue.PulledHigh;
     }
 
     public T GetNodeGroup<T>(Span<NodeId> nodeIds)
@@ -625,8 +629,8 @@ public sealed class ChipSimulator
             transistor.On = false;
         }
 
-        _nodes[n0].State = true;
-        _nodes[n1].State = false;
+        _nodes[n0].State = NodeValue.PulledHigh;
+        _nodes[n1].State = NodeValue.PulledLow;
 
         _recalcListOut.Add(n0);
         _recalcListOut.Add(n1);
