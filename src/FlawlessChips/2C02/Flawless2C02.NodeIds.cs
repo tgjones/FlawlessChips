@@ -2019,9 +2019,9 @@ partial class Flawless2C02
         public const NodeId active_low__ale = 1593;
         public const NodeId sec_oam_overflow = 3910;
 
-        // Groups of nodes
+        // Node buses
 
-        public static readonly NodeId[] ab =
+        public static readonly NodeBus<ushort> ab = new(
         [
             ab0,
             ab1,
@@ -2037,9 +2037,9 @@ partial class Flawless2C02
             ab11,
             ab12,
             ab13,
-        ];
+        ]);
 
-        public static readonly NodeId[] db =
+        public static readonly NodeBus<byte> db = new(
         [
             db0,
             db1,
@@ -2049,16 +2049,16 @@ partial class Flawless2C02
             db5,
             db6,
             db7,
-        ];
+        ]);
 
-        public static readonly NodeId[] io_ab =
+        public static readonly NodeBus<byte> io_ab = new(
         [
             io_ab0,
             io_ab1,
             io_ab2,
-        ];
+        ]);
 
-        public static readonly NodeId[] io_db =
+        public static readonly NodeBus<byte> io_db = new(
         [
             io_db0,
             io_db1,
@@ -2068,9 +2068,9 @@ partial class Flawless2C02
             io_db5,
             io_db6,
             io_db7,
-        ];
+        ]);
 
-        public static readonly NodeId[] hpos =
+        public static readonly NodeBus<ushort> hpos = new(
         [
             hpos0,
             hpos1,
@@ -2081,9 +2081,9 @@ partial class Flawless2C02
             hpos6,
             hpos7,
             hpos8,
-        ];
+        ]);
 
-        public static readonly NodeId[] vpos =
+        public static readonly NodeBus<ushort> vpos = new(
         [
             vpos0,
             vpos1,
@@ -2094,7 +2094,7 @@ partial class Flawless2C02
             vpos6,
             vpos7,
             vpos8,
-        ];
+        ]);
 
         public static readonly NodeId[][][] PaletteNodes =
         [

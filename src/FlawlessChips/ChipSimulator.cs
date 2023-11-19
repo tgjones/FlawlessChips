@@ -554,19 +554,7 @@ public class ChipSimulator
         SetNodes(nodeIds, values);
     }
 
-    public void SetNodes(Span<NodeId> nodeIds, NodeValue value)
-    {
-        Span<NodeValue> values = stackalloc NodeValue[nodeIds.Length];
-
-        for (var i = 0; i < nodeIds.Length; i++)
-        {
-            values[i] = value;
-        }
-
-        SetNodes(nodeIds, values);
-    }
-
-    public void SetNodes(Span<NodeId> nodeIds, Span<NodeValue> values)
+    private void SetNodes(Span<NodeId> nodeIds, Span<NodeValue> values)
     {
         for (var i = 0; i < nodeIds.Length; i++)
         {
@@ -583,25 +571,25 @@ public class ChipSimulator
 
     public NodeValue GetNode(NodeId nodeId) => _nodes[nodeId].State;
 
-    public T GetNodeGroup<T>(Span<NodeId> nodeIds)
-        where T : INumber<T>, IShiftOperators<T, int, T>
+    public T GetBus<T>(NodeBus<T> bus)
+        where T : IUnsignedNumber<T>, IShiftOperators<T, int, T>, IModulusOperators<T, T, T>
     {
         var result = T.Zero;
-        for (var i = 0; i < nodeIds.Length; i++)
+        for (var i = 0; i < bus.NodeIds.Length; i++)
         {
-            result += (GetNode(nodeIds[i]).IsHigh() ? T.One : T.Zero) << i;
+            result += (GetNode(bus.NodeIds[i]) == NodeValue.PulledHigh ? T.One : T.Zero) << i;
         }
         return result;
     }
 
-    public void SetNodeGroup<T>(Span<NodeId> nodeIds, T value)
+    public void SetBus<T>(NodeBus<T> bus, T value)
         where T : IUnsignedNumber<T>, IModulusOperators<T, T, T>
     {
-        Span<NodeValue> values = stackalloc NodeValue[nodeIds.Length];
+        Span<NodeValue> values = stackalloc NodeValue[bus.NodeIds.Length];
 
         var two = T.CreateChecked(2);
 
-        for (var i = 0; i < nodeIds.Length; i++)
+        for (var i = 0; i < bus.NodeIds.Length; i++)
         {
             values[i] = (value % two) != T.Zero
                 ? NodeValue.PulledHigh
@@ -609,7 +597,20 @@ public class ChipSimulator
             value /= two;
         }
 
-        SetNodes(nodeIds, values);
+        SetNodes(bus.NodeIds, values);
+    }
+
+    public void SetBusFloating<T>(NodeBus<T> bus)
+        where T : IUnsignedNumber<T>, IShiftOperators<T, int, T>
+    {
+        Span<NodeValue> values = stackalloc NodeValue[bus.NodeIds.Length];
+
+        for (var i = 0; i < bus.NodeIds.Length; i++)
+        {
+            values[i] = NodeValue.Floating;
+        }
+
+        SetNodes(bus.NodeIds, values);
     }
 
     // TODO: Check whether this can be done via SetNode. Is it important that we don't

@@ -27,12 +27,3 @@ public enum NodeValue
     PulledLow,
     Floating,
 }
-
-public static class NodeValueExtensions
-{
-    public static bool IsHigh(this NodeValue value) => value switch
-    {
-        NodeValue.PulledHigh => true,
-        _ => false,
-    };
-}

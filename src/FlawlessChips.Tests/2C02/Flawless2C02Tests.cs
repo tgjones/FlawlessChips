@@ -1,4 +1,3 @@
-using System;
 using NUnit.Framework;
 
 using static FlawlessChips.Flawless2C02.NodeIds;
@@ -21,9 +20,9 @@ namespace FlawlessChips.Tests
             {
                 cpuCommands.Next();
 
-                chip.SetNode(clk0, chip.GetNode(clk0).IsHigh() ? NodeValue.PulledLow : NodeValue.PulledHigh);
+                chip.SetNode(clk0, chip.GetNode(clk0) == NodeValue.PulledHigh ? NodeValue.PulledLow : NodeValue.PulledHigh);
 
-                if (chip.GetNodeGroup<ushort>(vpos) == 240)
+                if (chip.GetBus(vpos) == 240)
                 {
                     break;
                 }
@@ -49,9 +48,9 @@ namespace FlawlessChips.Tests
 
             while (true)
             {
-                chip.SetNode(clk0, chip.GetNode(clk0).IsHigh() ? NodeValue.PulledLow : NodeValue.PulledHigh);
+                chip.SetNode(clk0, chip.GetNode(clk0) == NodeValue.PulledHigh ? NodeValue.PulledLow : NodeValue.PulledHigh);
 
-                if (chip.GetNodeGroup<ushort>(vpos) == 0)
+                if (chip.GetBus(vpos) == 0)
                 {
                     break;
                 }
@@ -64,48 +63,6 @@ namespace FlawlessChips.Tests
             var actualState = chip.GetState();
 
             Assert.AreEqual(expectedState, actualState);
-        }
-
-        [Test]
-        public void TestVideoOutput()
-        {
-            var chip = new Flawless2C02();
-
-            chip.SetState(Flawless2C02.PresetStates.PreRenderEven);
-
-            chip.PaletteWrite(0x00, 0x21);
-
-            var cycle = 0;
-            while (true)
-            {
-                chip.SetNode(clk0, chip.GetNode(clk0).IsHigh() ? NodeValue.PulledLow : NodeValue.PulledHigh);
-
-                static string FormatNodeValue(NodeValue value) => value == NodeValue.PulledHigh ? "1" : "0";
-
-                var vposValue = chip.GetNodeGroup<ushort>(vpos);
-                var hposValue = chip.GetNodeGroup<ushort>(hpos);
-                var vid0Value = FormatNodeValue(chip.GetNode(vid_0));
-                var vid1Value = FormatNodeValue(chip.GetNode(vid_1));
-                var vid2Value = FormatNodeValue(chip.GetNode(vid_2));
-                var vid3Value = FormatNodeValue(chip.GetNode(vid_3));
-                var vid4Value = FormatNodeValue(chip.GetNode(vid_4));
-                var vid5Value = FormatNodeValue(chip.GetNode(vid_5));
-                var vid6Value = FormatNodeValue(chip.GetNode(vid_6));
-                var vid7Value = FormatNodeValue(chip.GetNode(vid_7));
-                var vid8Value = FormatNodeValue(chip.GetNode(vid_8));
-                var vid9Value = FormatNodeValue(chip.GetNode(vid_9));
-                var vid10Value = FormatNodeValue(chip.GetNode(vid_10));
-                var vid11Value = FormatNodeValue(chip.GetNode(vid_11));
-
-                Console.WriteLine($"{cycle:X5} {vposValue:X3} {hposValue:X3} {vid0Value} {vid1Value} {vid2Value} {vid3Value} {vid4Value} {vid5Value} {vid6Value} {vid7Value} {vid8Value} {vid9Value} {vid10Value} {vid11Value}");
-
-                if (vposValue == 0)
-                {
-                    break;
-                }
-
-                cycle++;
-            }
         }
 
         // TODO: Refactor this.
@@ -163,7 +120,7 @@ namespace FlawlessChips.Tests
                     else
                     {
                         _counter = _current & 0x7FF;
-                        _chip.SetNodes(io_db, NodeValue.Floating);
+                        _chip.SetBusFloating(io_db);
                     }
                 }
                 if (_counter > 0)
@@ -174,14 +131,14 @@ namespace FlawlessChips.Tests
                     var d = (byte)(_current & 0xFF);
                     if ((_counter == 24) && ce)
                     {
-                        _chip.SetNodeGroup(io_ab, a);
+                        _chip.SetBus(io_ab, a);
                         if (rw)
                         {
-                            _chip.SetNodes(io_db, NodeValue.Floating);
+                            _chip.SetBusFloating(io_db);
                         }
                         else
                         {
-                            _chip.SetNodeGroup(io_db, d);
+                            _chip.SetBus(io_db, d);
                         }
                         _chip.SetNode(io_rw, rw ? NodeValue.PulledHigh : NodeValue.PulledLow);
                     }
@@ -193,7 +150,7 @@ namespace FlawlessChips.Tests
                     {
                         if (rw)
                         {
-                            d = _chip.GetNodeGroup<byte>(io_db);
+                            d = _chip.GetBus(io_db);
                             // store result in the test program
                             //cpucmd_setCellValue(cpucmd_address * 8 + 5, d);
                         }
