@@ -1,10 +1,10 @@
-using System.Collections.Generic;
-using System.Collections;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace FlawlessChips;
 
@@ -559,6 +559,12 @@ public class ChipSimulator
         for (var i = 0; i < nodeIds.Length; i++)
         {
             var nodeId = nodeIds[i];
+
+            if (nodeId == NodeId.MaxValue)
+            {
+                continue;
+            }
+
             ref var node = ref _nodes[nodeId];
 
             node.Pulled = values[i];
@@ -577,7 +583,16 @@ public class ChipSimulator
         var result = T.Zero;
         for (var i = 0; i < bus.NodeIds.Length; i++)
         {
-            result += (GetNode(bus.NodeIds[i]) == NodeValue.PulledHigh ? T.One : T.Zero) << i;
+            var nodeId = bus.NodeIds[i];
+
+            if (nodeId == NodeId.MaxValue)
+            {
+                continue;
+            }
+
+            var isHigh = GetNode(nodeId) == NodeValue.PulledHigh;
+
+            result += (isHigh ? T.One : T.Zero) << i;
         }
         return result;
     }

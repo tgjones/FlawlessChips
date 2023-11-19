@@ -10,7 +10,6 @@ public sealed partial class Flawless2C02 : ChipSimulator
                gnd,
                pwr)
     {
-
     }
 
     public void Startup()
