@@ -35,7 +35,7 @@ This project is essentially a C# port of the following projects:
 
 ### 6502
 
-* [Visual 6502](http://www.visual6502.org/JSSim/index.html)
+* [Visual 6502](http://www.visual6502.org/JSSim/index.html) by Greg James, Brian Silverman, and Barry Silverman
   * with optimization ideas from [perfect6502](https://github.com/mist64/perfect6502) by [Michael Steil](http://www.pagetable.com/).
 
 The logo is a modified version of the [chips](https://thenounproject.com/icon/chips-4719557/) icon by [pictranoosa](https://thenounproject.com/ihsannugroho/), and the [perfect](https://thenounproject.com/icon/perfect-1221120/) icon by [Paffi](https://thenounproject.com/paffi/).

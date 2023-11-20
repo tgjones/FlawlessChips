@@ -16,7 +16,7 @@ namespace FlawlessChips.Tests
                 "llllllllllllllllllllllllllllllxlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllxllllllllllllllllllllllllllllxllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllxllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllxlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllxllllllllllllllllllllllllllllllllllllllllllllxlllllllllllllllgllllxlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllvlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllxllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllxllllllxlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllxlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllxxllllllllllllllllllllllllllllllllllllllllllllllllllllxlllllllllllllllllllllllllllllllllllllllllllllllllllllllxlllllllllllllllllllllllllllllllllllllllllllxlxlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllxlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllxlllllllllllllllllllllllllllllllllllllxlllllllllllllllllllllll",
                 chip.GetState());
 
-            var memory = new byte[ushort.MaxValue];
+            var memory = new byte[ushort.MaxValue + 1];
 
             var testProgram = new byte[]
             {
@@ -39,7 +39,9 @@ namespace FlawlessChips.Tests
 
             chip.Startup();
 
-            void HandleMemory()
+            var output = "";
+
+            void HandleBusRead()
             {
                 if (chip.GetNode(rw) == NodeValue.PulledHigh)
                 {
@@ -47,11 +49,20 @@ namespace FlawlessChips.Tests
                     var data = memory[address];
                     chip.SetBus(db, data);
                 }
-                else
+            }
+
+            void HandleBusWrite()
+            {
+                if (chip.GetNode(rw) != NodeValue.PulledHigh)
                 {
                     var address = chip.GetBus(ab);
                     var data = chip.GetBus(db);
                     memory[address] = data;
+
+                    if (address == 0x000F)
+                    {
+                        output += (char)data;
+                    }
                 }
             }
 
@@ -63,12 +74,16 @@ namespace FlawlessChips.Tests
 
                 chip.SetNode(clk0, clk ? NodeValue.PulledHigh : NodeValue.PulledLow);
 
-                if (!clk)
+                if (clk)
                 {
-                    HandleMemory();
+                    HandleBusWrite();
+                }
+                else
+                {
+                    HandleBusRead();
                 }
 
-                Console.WriteLine($"PC {chip.GetBus(pch):X2}{chip.GetBus(pcl):X2}   AB {chip.GetBus(ab):X4}   DB {chip.GetBus(db):X2}  {(chip.GetNode(rw) == NodeValue.PulledHigh ? 'R' : 'W')}");
+                //Console.WriteLine($"PC {chip.GetBus(pch):X2}{chip.GetBus(pcl):X2}   X {chip.GetBus(x):X2}   Y {chip.GetBus(y):X2}   A {chip.GetBus(a):X2}   SP {chip.GetBus(s):X2}   AB {chip.GetBus(ab):X4}   DB {chip.GetBus(db):X2}  {(chip.GetNode(rw) == NodeValue.PulledHigh ? 'R' : 'W')}");
             }
 
             // Run for 18 half-cycles so that chip has _just_ finished RESET sequence
@@ -81,6 +96,13 @@ namespace FlawlessChips.Tests
             Assert.AreEqual(
                 "lllhlhllllhhllllhhhllhllhlhlhhxhlhlhhllhlhllhlhhhllhllhhhhlllllllhhlhlllllhhlllhhhllllhllhhlhlhhlllhlhhhhllhhhhhlhhlhhhhllhhhllllllllllhllhhllllxllllhhllhllllhhhlhlllhlhlhhhxhhllllllllhllllllllhhlhlhhllllllhlllhlhhlhllllhhhlllhhlllhhllllhhllhlhllhllhllhlhhhllllhhhhlhlllhlllllhlhhhlhlhllllhxllhlllhllhlllllllllhllllllhlhlllhlllhlhllhlllhlhhhllhhhlhllhhlhlllhhhlhlhhhhlhhllhlhllllllhlhhlhlllhlllhllhhlllllllllhhlxhlhhhhlhhllhlhlhhhlllllllllllhhhllllllhllhlllhhhhlhhllllhlhlhllllhhllhllhhllhlhhllhhlxhhllllhlhllhlhhhhlhllhlhlhhlhhlhhllllhhlhhlhxlhllllhlhlhlhhhghlhhxlhhllhlhllllhhllllhhllllllhhhhlhllhlllhlhhllhhlllhllhhhhhhllhlhhlhllhllhhlhhhhhlhhllllhlllhllvlhlhhlhlllhhlhlhhlhllhhhlhlllllhhllhlhlhhhllhhlhlhllhhlllllhlllhlhhhhlhhhlllllllhhllllhllhlxlhlhllhhhlhhlhllllhllhhhhllllhhllhlhlllhhlhllllhlhhlhhlhlhllllhhlhllhhhhlhhhlhlhlhllhhhhhlhhhlhhlllhhhlhhlllhhlhhhhllllhlllhllhlhlhlhhllllhhhllhhhlhlllhlhlhhhxhlllhhxllhhhhlhlhlhhhhllhlhlhlhlllllllllhlhhllhhllhlhlllllllhlhllhlhlllhhlllllhllhllhhhllhhlhlhlhlhlhhlhllhhhhllhlllhhhhlllllhhlhlhlllllhhhhhlhlhhlllhlllhhhhllllhllhlhlhllhllhlhlllhhhlhhlllhhhlllhlhhlllllhlllhhhhhhhhhlxhllhlhhlllhllhhllhllllhllhllhhlllhlhlhlhllhlhlhlhlhlhlhhhlllhhllhlhhhlhhhhlhlhlxxlllhlhlllhhhllhhhlllhhhllhlhlhllhllhhllhhllllhhhllllxhllhhhlllhllhhlhlhhllhhllhhhhllllllhhlhllhlllhhhlllhlhlxhhhlhhllhhllllhllhhllllhlhllhllhllhhllhhhlhxlxllhllllllllhhhhhlllhllhllhlhllhhlhlhhhhhhhhhhllhlhllhlhllhlhlhlhlllhllhhllhhhlhlhllhlhlhllhhlhhllxhlhllhllllhlhhlhllllllhhllllhlllhllllhhllllhhhlhlhlhhlhlhhlhhhlllhlhllhhllhhllllhllllhhlhlhhhhlhhlhhlhllhhhllhlhlllhlllhlllhhlllhlhllhllhlhlhllhhllhllllhllllhhhlllllhhllhlllhhlhlhhlhlllllhhllhhhhhllhllxlllhhhlllllhhhllhllhhlhhhlhllhlllllllxhhlhllhllhllhlhhhllllll",
                 chip.GetState());
+
+            for (var i = 0; i < 200; i++)
+            {
+                HalfStep();
+            }
+
+            Assert.AreEqual("@AABBCC", output);
         }
     }
 }
