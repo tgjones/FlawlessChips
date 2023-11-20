@@ -14,6 +14,9 @@ public sealed partial class Flawless6502 : ChipSimulator
 
     public void Startup()
     {
+        // Recalculate all nodes until the chip stabilizes
+        StabilizeChip();
+
         // Assert RESET and initialize other inputs
         SetNode(res, NodeValue.PulledLow);
         SetNode(clk0, NodeValue.PulledLow);
@@ -22,11 +25,8 @@ public sealed partial class Flawless6502 : ChipSimulator
         SetNode(irq, NodeValue.PulledHigh);
         SetNode(nmi, NodeValue.PulledHigh);
 
-        // Recalculate all nodes until the chip stabilizes
-        StabilizeChip();
-
-        // Run for 4 cycles so that RESET fully takes effect
-        for (var i = 0; i < 4; i++)
+        // Run for 8 cycles so that RESET fully takes effect
+        for (var i = 0; i < 8; i++)
         {
             SetNode(clk0, NodeValue.PulledHigh);
             SetNode(clk0, NodeValue.PulledLow);
@@ -34,12 +34,5 @@ public sealed partial class Flawless6502 : ChipSimulator
 
         // Deassert RESET so the chip can continue running normally
         SetNode(res, NodeValue.PulledHigh);
-
-        // Run for 18 cycles so that chip is... definitely ready for user code?
-        for (var i = 0; i < 18; i++)
-        {
-            SetNode(clk0, NodeValue.PulledHigh);
-            SetNode(clk0, NodeValue.PulledLow);
-        }
     }
 }
