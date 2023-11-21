@@ -35,4 +35,6 @@ public sealed partial class Flawless6502 : ChipSimulator
         // Deassert RESET so the chip can continue running normally
         SetNode(res, NodeValue.PulledHigh);
     }
+
+    public ushort GetPC() => (ushort)((GetBus(pch) << 8) | GetBus(pcl));
 }

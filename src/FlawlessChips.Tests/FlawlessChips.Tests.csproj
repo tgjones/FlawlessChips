@@ -18,4 +18,8 @@
     <ProjectReference Include="..\FlawlessChips\FlawlessChips.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="*/*.bin" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
