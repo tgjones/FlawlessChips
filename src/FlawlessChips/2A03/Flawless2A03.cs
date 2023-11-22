@@ -5,10 +5,7 @@ namespace FlawlessChips;
 public sealed partial class Flawless2A03 : ChipSimulator
 {
     public Flawless2A03()
-        : base("FlawlessChips._2A03.SegmentDefinitions.txt",
-               "FlawlessChips._2A03.TransistorDefinitions.txt",
-               gnd,
-               pwr)
+        : base("_2A03", gnd, pwr)
     {
     }
 

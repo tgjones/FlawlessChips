@@ -39,15 +39,14 @@ public class ChipSimulator
     private GroupState _groupState;
 
     public ChipSimulator(
-        string segmentDefinitionsResourceName,
-        string transistorDefinitionsResourceName,
+        string chipResourceName,
         NodeId gnd,
         NodeId pwr)
     {
         _nodeGnd = gnd;
         _nodePwr = pwr;
 
-        var segmentDefinitions = ReadSegmentDefinitions(segmentDefinitionsResourceName);
+        var segmentDefinitions = ReadSegmentDefinitions($"FlawlessChips.{chipResourceName}.SegmentDefinitions.txt");
 
         // Check maximum node ID.
         var maximumId = 0;
@@ -62,7 +61,7 @@ public class ChipSimulator
             _nodes[i].NodeId = NullNodeId;
         }
 
-        var transistorDefinitions = ReadTransistorDefinitions(transistorDefinitionsResourceName);
+        var transistorDefinitions = ReadTransistorDefinitions($"FlawlessChips.{chipResourceName}.TransistorDefinitions.txt");
 
         _transistors = new Transistor[transistorDefinitions.Count];
 
