@@ -8,8 +8,7 @@ using System.Text;
 
 namespace FlawlessChips;
 
-public class ChipSimulator<TChipSimulatorOverrides>
-    where TChipSimulatorOverrides : IChipSimulatorOverrides
+public class ChipSimulator
 {
     private const NodeId NullNodeId = NodeId.MaxValue;
 
@@ -25,6 +24,17 @@ public class ChipSimulator<TChipSimulatorOverrides>
     private List<NodeId> _recalcListOut;
 
     private readonly List<NodeId> _group;
+
+    [Flags]
+    protected enum GroupState
+    {
+        ContainsNothing = 0,
+        ContainsHi = 1 << 0,
+        ContainsPulldown = 1 << 1,
+        ContainsPullup = 1 << 2,
+        ContainsPwr = 1 << 3,
+        ContainsGnd = 1 << 4,
+    }
 
     private GroupState _groupState;
 
@@ -71,7 +81,7 @@ public class ChipSimulator<TChipSimulatorOverrides>
 
     private static List<SegmentDefinition> ReadSegmentDefinitions(string segmentDefinitionsResourceName)
     {
-        using var stream = typeof(ChipSimulator<>).Assembly.GetManifestResourceStream(segmentDefinitionsResourceName)!;
+        using var stream = typeof(ChipSimulator).Assembly.GetManifestResourceStream(segmentDefinitionsResourceName)!;
         using var streamReader = new StreamReader(stream);
 
         var result = new List<SegmentDefinition>();
@@ -125,7 +135,7 @@ public class ChipSimulator<TChipSimulatorOverrides>
 
     private static List<TransistorDefinition> ReadTransistorDefinitions(string transistorDefinitionsResourceName)
     {
-        using var stream = typeof(ChipSimulator<>).Assembly.GetManifestResourceStream(transistorDefinitionsResourceName)!;
+        using var stream = typeof(ChipSimulator).Assembly.GetManifestResourceStream(transistorDefinitionsResourceName)!;
         using var streamReader = new StreamReader(stream);
 
         var result = new List<TransistorDefinition>();
@@ -384,9 +394,11 @@ public class ChipSimulator<TChipSimulatorOverrides>
         }
     }
 
+    protected virtual void OverrideGroupState(ref GroupState groupState, List<NodeId> group) { }
+
     private NodeValue GetNodeValue()
     {
-        TChipSimulatorOverrides.OverrideGroupState(ref _groupState, _group);
+        OverrideGroupState(ref _groupState, _group);
 
         if ((_groupState & GroupState.ContainsGnd) != 0)
         {
@@ -629,15 +641,4 @@ public class ChipSimulator<TChipSimulatorOverrides>
 
         RecalcNodeList();
     }
-}
-
-[Flags]
-public enum GroupState
-{
-    ContainsNothing = 0,
-    ContainsHi = 1 << 0,
-    ContainsPulldown = 1 << 1,
-    ContainsPullup = 1 << 2,
-    ContainsPwr = 1 << 3,
-    ContainsGnd = 1 << 4,
 }

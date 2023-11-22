@@ -1,10 +1,8 @@
-using System.Collections.Generic;
-
 using static FlawlessChips.Flawless6502.NodeIds;
 
 namespace FlawlessChips;
 
-public sealed partial class Flawless6502 : ChipSimulator<Flawless6502>, IChipSimulatorOverrides
+public sealed partial class Flawless6502 : ChipSimulator
 {
     public Flawless6502()
         : base("FlawlessChips._6502.SegmentDefinitions.txt",
@@ -12,11 +10,6 @@ public sealed partial class Flawless6502 : ChipSimulator<Flawless6502>, IChipSim
                vss,
                vcc)
     {
-    }
-
-    static void IChipSimulatorOverrides.OverrideGroupState(ref GroupState groupState, List<NodeId> group)
-    {
-        // Do nothing.
     }
 
     public void Startup()
