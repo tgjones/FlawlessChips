@@ -20,7 +20,7 @@ public class Flawless2C02Tests
         {
             cpuCommands.Next();
 
-            chip.SetNode(clk0, chip.GetNode(clk0) == NodeValue.PulledHigh ? NodeValue.PulledLow : NodeValue.PulledHigh);
+            chip.SetNode(clk0, chip.IsHigh(clk0) ? NodeValue.PulledLow : NodeValue.PulledHigh);
 
             if (chip.GetBus(vpos) == 240)
             {
@@ -48,7 +48,7 @@ public class Flawless2C02Tests
 
         while (true)
         {
-            chip.SetNode(clk0, chip.GetNode(clk0) == NodeValue.PulledHigh ? NodeValue.PulledLow : NodeValue.PulledHigh);
+            chip.SetNode(clk0, chip.IsHigh(clk0) ? NodeValue.PulledLow : NodeValue.PulledHigh);
 
             if (chip.GetBus(vpos) == 0)
             {
@@ -144,7 +144,7 @@ public class Flawless2C02Tests
                 }
                 if ((_counter == 16) && ce)
                 {
-                    _chip.SetNode(io_ce, NodeValue.PulledLow);
+                    _chip.SetLow(io_ce);
                 }
                 if (_counter == 1)
                 {
@@ -154,7 +154,7 @@ public class Flawless2C02Tests
                         // store result in the test program
                         //cpucmd_setCellValue(cpucmd_address * 8 + 5, d);
                     }
-                    _chip.SetNode(io_ce, NodeValue.PulledHigh);
+                    _chip.SetHigh(io_ce);
                 }
                 _counter--;
                 if (_counter == 0)

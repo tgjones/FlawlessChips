@@ -11,18 +11,18 @@ public sealed partial class Flawless2A03 : ChipSimulator
 
     public void Startup()
     {
-        SetNode(clk_in, NodeValue.PulledLow);
+        SetLow(clk_in);
         for (var i = 0; i < 6; i++)
         {
-            SetNode(clk_in, NodeValue.PulledHigh);
-            SetNode(clk_in, NodeValue.PulledLow);
+            SetHigh(clk_in);
+            SetLow(clk_in);
         }
 
         // Assert RESET and initialize other inputs
-        SetNode(res, NodeValue.PulledLow);
-        SetNode(so, NodeValue.PulledLow);
-        SetNode(irq, NodeValue.PulledHigh);
-        SetNode(nmi, NodeValue.PulledHigh);
+        SetLow(res);
+        SetLow(so);
+        SetHigh(irq);
+        SetHigh(nmi);
 
         // Recalculate all nodes until the chip stabilizes
         StabilizeChip();
@@ -30,12 +30,12 @@ public sealed partial class Flawless2A03 : ChipSimulator
         // Run for 8 6502 cycles so that RESET fully takes effect
         for (var i = 0; i < 8 * 12; i++)
         {
-            SetNode(clk_in, NodeValue.PulledHigh);
-            SetNode(clk_in, NodeValue.PulledLow);
+            SetHigh(clk_in);
+            SetLow(clk_in);
         }
 
         // Deassert RESET so the chip can continue running normally
-        SetNode(res, NodeValue.PulledHigh);
+        SetHigh(res);
     }
 
     public ushort GetPC() => (ushort)((GetBus(pch) << 8) | GetBus(pcl));

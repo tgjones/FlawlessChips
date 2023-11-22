@@ -52,7 +52,7 @@ public class Flawless2A03Tests
 
         void HandleMemoryAccess()
         {
-            if (chip.GetNode(rw) == NodeValue.PulledHigh)
+            if (chip.IsHigh(rw))
             {
                 var address = chip.GetBus(ab);
                 var data = memory[address];
@@ -75,14 +75,14 @@ public class Flawless2A03Tests
 
         void HalfStep()
         {
-            var cpuClk = chip.GetNode(clk0);
+            var cpuClk = chip.IsHigh(clk0);
 
             clk = !clk;
 
             chip.SetNode(clk_in, clk ? NodeValue.PulledHigh : NodeValue.PulledLow);
 
             // Only do memory reads / writes if CPU was just clocked and M2 is high.
-            if (cpuClk != chip.GetNode(clk0) && chip.GetNode(phi2) == NodeValue.PulledHigh)
+            if (cpuClk != chip.IsHigh(clk0) && chip.IsHigh(phi2))
             {
                 HandleMemoryAccess();
             }
@@ -120,7 +120,7 @@ public class Flawless2A03Tests
 
         void HandleMemoryAccess()
         {
-            if (chip.GetNode(rw) == NodeValue.PulledHigh)
+            if (chip.IsHigh(rw))
             {
                 var address = chip.GetBus(ab);
 
@@ -182,14 +182,14 @@ public class Flawless2A03Tests
 
         void HalfStep()
         {
-            var cpuClk = chip.GetNode(clk0);
+            var cpuClk = chip.IsHigh(clk0);
 
             clk = !clk;
 
             chip.SetNode(clk_in, clk ? NodeValue.PulledHigh : NodeValue.PulledLow);
 
             // Only do memory accesses if CPU was just clocked and M2 is high.
-            if (cpuClk != chip.GetNode(clk0) && chip.GetNode(phi2) == NodeValue.PulledHigh)
+            if (cpuClk != chip.IsHigh(clk0) && chip.IsHigh(phi2))
             {
                 HandleMemoryAccess();
             }

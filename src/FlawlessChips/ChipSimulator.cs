@@ -544,6 +544,9 @@ public class ChipSimulator
         SetNodes(nodeIds, values);
     }
 
+    public void SetHigh(NodeId nodeId) => SetNode(nodeId, NodeValue.PulledHigh);
+    public void SetLow(NodeId nodeId) => SetNode(nodeId, NodeValue.PulledLow);
+
     private void SetNodes(Span<NodeId> nodeIds, Span<NodeValue> values)
     {
         for (var i = 0; i < nodeIds.Length; i++)
@@ -567,6 +570,8 @@ public class ChipSimulator
 
     public NodeValue GetNode(NodeId nodeId) => _nodes[nodeId].State;
 
+    public bool IsHigh(NodeId nodeId) => GetNode(nodeId) == NodeValue.PulledHigh;
+
     public T GetBus<T>(NodeBus<T> bus)
         where T : IUnsignedNumber<T>, IShiftOperators<T, int, T>, IModulusOperators<T, T, T>
     {
@@ -580,7 +585,7 @@ public class ChipSimulator
                 continue;
             }
 
-            var isHigh = GetNode(nodeId) == NodeValue.PulledHigh;
+            var isHigh = IsHigh(nodeId);
 
             result += (isHigh ? T.One : T.Zero) << i;
         }

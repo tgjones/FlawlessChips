@@ -40,10 +40,10 @@ public sealed partial class Flawless2C02 : ChipSimulator
     public void Startup()
     {
         // Assert RESET and initialize other inputs
-        SetNode(res, NodeValue.PulledLow);
-        SetNode(clk0, NodeValue.PulledLow);
-        SetNode(io_ce, NodeValue.PulledHigh);
-        SetNode(@int, NodeValue.PulledHigh);
+        SetLow(res);
+        SetLow(clk0);
+        SetHigh(io_ce);
+        SetHigh(@int);
 
         // Recalculate all nodes until the chip stabilizes
         StabilizeChip();
@@ -51,12 +51,12 @@ public sealed partial class Flawless2C02 : ChipSimulator
         // Run for 4 cycles so that RESET fully takes effect
         for (var i = 0; i < 4; i++)
         {
-            SetNode(clk0, NodeValue.PulledHigh);
-            SetNode(clk0, NodeValue.PulledLow);
+            SetHigh(clk0);
+            SetLow(clk0);
         }
 
         // Deassert RESET so the chip can continue running normally
-        SetNode(res, NodeValue.PulledHigh);
+        SetHigh(res);
     }
 
     public void PaletteWrite(byte address, byte value)

@@ -46,7 +46,7 @@ public class Flawless6502Tests
 
         void HandleMemoryAccess()
         {
-            if (chip.GetNode(rw) == NodeValue.PulledHigh)
+            if (chip.IsHigh(rw))
             {
                 var address = chip.GetBus(ab);
                 var data = memory[address];
@@ -73,7 +73,7 @@ public class Flawless6502Tests
 
             chip.SetNode(clk0, clk ? NodeValue.PulledHigh : NodeValue.PulledLow);
 
-            if (chip.GetNode(clk2out) == NodeValue.PulledHigh)
+            if (chip.IsHigh(clk2out))
             {
                 HandleMemoryAccess();
             }
@@ -111,7 +111,7 @@ public class Flawless6502Tests
 
         void HandleMemoryAccess()
         {
-            if (chip.GetNode(rw) == NodeValue.PulledHigh)
+            if (chip.IsHigh(rw))
             {
                 var address = chip.GetBus(ab);
 
@@ -177,7 +177,7 @@ public class Flawless6502Tests
 
             chip.SetNode(clk0, clk ? NodeValue.PulledHigh : NodeValue.PulledLow);
 
-            if (chip.GetNode(clk2out) == NodeValue.PulledHigh)
+            if (chip.IsHigh(clk2out))
             {
                 HandleMemoryAccess();
             }
