@@ -4,25 +4,79 @@
 
 FlawlessChips is a C# library that provides gate-level simulation of various 8-bit chips.
 
+FlawlessChips is (with a nod and wink to [perfect6502](https://github.com/mist64/perfect6502)'s description):
+
+* *Flawless* - it is a simulation of the original transistors, not an emulation. (Of course, there might be bugs...)
+* *Slow* - like, *really slow*. This implementation is faster than the JavaScript implementations on which it's based, but it's still way slower than the original chips.
+
+FlawlessChips's intended audience is emulator authors who want to run their emulations and compare e.g. output pins with this half-cycle exact simulation.
+
 ## Simulated chips
 
-* 6502
-* 2A03
-* 2C02
-
-TODO
-
-## Documentation
-
-TODO
+* 6502 - `FlawlessChips.Flawless6502`
+* 2A03 - `FlawlessChips.Flawless2A03`
+* 2C02 - `FlawlessChips.Flawless2C02`
 
 ## Install
 
-TODO
+FlawlessChips is available as a [NuGet Package](https://www.nuget.org/packages/FlawlessChips/).
 
 ## Usage
 
-TODO
+This example shows the `Flawless6502` chip simulator. Other chips are similar.
+
+``` c#
+var chip = new Flawless6502();
+
+// Assert reset pin, initialize other pins, deassert reset pin.
+// Calling this method is optional; you can perform this setup
+// in your own code.
+chip.Startup();
+
+// Loop a few times.
+for (var i = 0; i < 100; i++)
+{
+    var newClk = !chip.IsHigh(clk0);
+
+    // Pulse clock pin. Any transistors connected to this pin will be re-evaluated, recursively,
+    // until the chip "settles" in its new state.
+    chip.SetNode(clk0, newClk ? NodeValue.PulledHigh : NodeValue.PulledLow);
+
+    // Memory accesses should only occur when the 6502's phi2 output pin is high.
+    if (chip.IsHigh(clk2out))
+    {
+        // Does the 6502 want to read?
+        if (chip.IsHigh(rw))
+        {
+            // You can access individual pin values via chip.IsHigh(ab0), chip.IsHigh(ab1), etc.
+            // But for simplicity there's GetBus and SetBus to set the whole bus value at once.
+            var address = chip.GetBus(ab);
+            var data = memory[address];
+            chip.SetBus(db, data);
+        }
+        else // Otherwise the 6502 wants to write.
+        {
+            var address = chip.GetBus(ab);
+            var data = chip.GetBus(db);
+            memory[address] = data;
+        }
+    }
+
+    // Print out a few interesting bits of chip state. There are also hundreds of other node names
+    // available in the FlawlessChips.Flawless6502.NodeIds class.
+    Console.WriteLine(
+        "Φ2 {0}   PC {1:X4}   X {2:X2}   Y {3:X2}   A {4:X2}   SP {5:X2}   AB {6:X4}   DB {7:X2}   RW {8}",
+        chip.IsHigh(clk2out) ? '1' : '0',
+        chip.GetPC(),
+        chip.GetBus(x),
+        chip.GetBus(y),
+        chip.GetBus(a),
+        chip.GetBus(s),
+        chip.GetBus(ab),
+        chip.GetBus(db),
+        chip.IsHigh(rw) ? '1' : '0');
+}
+```
 
 ## License
 

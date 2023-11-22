@@ -79,7 +79,17 @@ public class Flawless6502Tests
             }
 
             // Uncomment this line to see chip state at each step.
-            //Console.WriteLine($"PC {chip.GetBus(pch):X2}{chip.GetBus(pcl):X2}   X {chip.GetBus(x):X2}   Y {chip.GetBus(y):X2}   A {chip.GetBus(a):X2}   SP {chip.GetBus(s):X2}   AB {chip.GetBus(ab):X4}   DB {chip.GetBus(db):X2}  {(chip.GetNode(rw) == NodeValue.PulledHigh ? 'R' : 'W')}");
+            //Console.WriteLine(
+            //    "Φ2 {0}   PC {1:X4}   X {2:X2}   Y {3:X2}   A {4:X2}   SP {5:X2}   AB {6:X4}   DB {7:X2}   RW {8}",
+            //    chip.IsHigh(clk2out) ? '1' : '0',
+            //    chip.GetPC(),
+            //    chip.GetBus(x),
+            //    chip.GetBus(y),
+            //    chip.GetBus(a),
+            //    chip.GetBus(s),
+            //    chip.GetBus(ab),
+            //    chip.GetBus(db),
+            //    chip.IsHigh(rw) ? '1' : '0');
         }
 
         for (var i = 0; i < 217; i++)
