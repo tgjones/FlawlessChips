@@ -8,7 +8,8 @@ using System.Text;
 
 namespace FlawlessChips;
 
-public class ChipSimulator
+public class ChipSimulator<TChipSimulatorOverrides>
+    where TChipSimulatorOverrides : IChipSimulatorOverrides
 {
     private const NodeId NullNodeId = NodeId.MaxValue;
 
@@ -26,17 +27,6 @@ public class ChipSimulator
     private readonly List<NodeId> _group;
 
     private GroupState _groupState;
-
-    [Flags]
-    private enum GroupState
-    {
-        ContainsNothing = 0,
-        ContainsHi = 1 << 0,
-        ContainsPulldown = 1 << 1,
-        ContainsPullup = 1 << 2,
-        ContainsPwr = 1 << 3,
-        ContainsGnd = 1 << 4,
-    }
 
     public ChipSimulator(
         string segmentDefinitionsResourceName,
@@ -81,7 +71,7 @@ public class ChipSimulator
 
     private static List<SegmentDefinition> ReadSegmentDefinitions(string segmentDefinitionsResourceName)
     {
-        using var stream = typeof(ChipSimulator).Assembly.GetManifestResourceStream(segmentDefinitionsResourceName)!;
+        using var stream = typeof(ChipSimulator<>).Assembly.GetManifestResourceStream(segmentDefinitionsResourceName)!;
         using var streamReader = new StreamReader(stream);
 
         var result = new List<SegmentDefinition>();
@@ -130,7 +120,7 @@ public class ChipSimulator
 
     private static List<TransistorDefinition> ReadTransistorDefinitions(string transistorDefinitionsResourceName)
     {
-        using var stream = typeof(ChipSimulator).Assembly.GetManifestResourceStream(transistorDefinitionsResourceName)!;
+        using var stream = typeof(ChipSimulator<>).Assembly.GetManifestResourceStream(transistorDefinitionsResourceName)!;
         using var streamReader = new StreamReader(stream);
 
         var result = new List<TransistorDefinition>();
@@ -391,23 +381,7 @@ public class ChipSimulator
 
     private NodeValue GetNodeValue()
     {
-        if ((_groupState & GroupState.ContainsGnd) != 0 && (_groupState & GroupState.ContainsPwr) != 0)
-        {
-            // spr_d0 thru spr_d7 sometimes get conflicts,
-            // so suppress them here
-            if (_group.Contains(359) ||
-                _group.Contains(566) ||
-                _group.Contains(691) ||
-                _group.Contains(871) ||
-                _group.Contains(870) ||
-                _group.Contains(864) ||
-                _group.Contains(856) ||
-                _group.Contains(818))
-            {
-                _groupState &= ~GroupState.ContainsGnd;
-                _groupState &= ~GroupState.ContainsPwr;
-            }
-        }
+        TChipSimulatorOverrides.OverrideGroupState(ref _groupState, _group);
 
         if ((_groupState & GroupState.ContainsGnd) != 0)
         {
@@ -419,14 +393,14 @@ public class ChipSimulator
             return NodeValue.PulledHigh;
         }
 
-        if ((_groupState & GroupState.ContainsPullup) != 0)
-        {
-            return NodeValue.PulledHigh;
-        }
-
         if ((_groupState & GroupState.ContainsPulldown) != 0)
         {
             return NodeValue.PulledLow;
+        }
+
+        if ((_groupState & GroupState.ContainsPullup) != 0)
+        {
+            return NodeValue.PulledHigh;
         }
 
         if ((_groupState & GroupState.ContainsHi) != 0)
@@ -650,4 +624,15 @@ public class ChipSimulator
 
         RecalcNodeList();
     }
+}
+
+[Flags]
+public enum GroupState
+{
+    ContainsNothing = 0,
+    ContainsHi = 1 << 0,
+    ContainsPulldown = 1 << 1,
+    ContainsPullup = 1 << 2,
+    ContainsPwr = 1 << 3,
+    ContainsGnd = 1 << 4,
 }

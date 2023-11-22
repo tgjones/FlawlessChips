@@ -1,8 +1,10 @@
+using System.Collections.Generic;
+
 using static FlawlessChips.Flawless2A03.NodeIds;
 
 namespace FlawlessChips;
 
-public sealed partial class Flawless2A03 : ChipSimulator
+public sealed partial class Flawless2A03 : ChipSimulator<Flawless2A03>, IChipSimulatorOverrides
 {
     public Flawless2A03()
         : base("FlawlessChips._2A03.SegmentDefinitions.txt",
@@ -10,6 +12,11 @@ public sealed partial class Flawless2A03 : ChipSimulator
                gnd,
                pwr)
     {
+    }
+
+    static void IChipSimulatorOverrides.OverrideGroupState(ref GroupState groupState, List<NodeId> group)
+    {
+        // Do nothing.
     }
 
     public void Startup()
