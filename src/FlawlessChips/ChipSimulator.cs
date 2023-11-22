@@ -82,6 +82,11 @@ public class ChipSimulator<TChipSimulatorOverrides>
         string? rawLine;
         while ((rawLine = streamReader.ReadLine()) != null)
         {
+            if (rawLine == "" || rawLine.StartsWith("//", StringComparison.InvariantCultureIgnoreCase))
+            {
+                continue;
+            }
+
             var line = rawLine.Split(',');
 
             var numCoordinates = line.Length - 3;
