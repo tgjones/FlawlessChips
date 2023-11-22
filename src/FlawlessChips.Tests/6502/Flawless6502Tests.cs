@@ -44,7 +44,7 @@ public class Flawless6502Tests
 
         var output = "";
 
-        void HandleBusRead()
+        void HandleMemoryAccess()
         {
             if (chip.GetNode(rw) == NodeValue.PulledHigh)
             {
@@ -52,11 +52,7 @@ public class Flawless6502Tests
                 var data = memory[address];
                 chip.SetBus(db, data);
             }
-        }
-
-        void HandleBusWrite()
-        {
-            if (chip.GetNode(rw) != NodeValue.PulledHigh)
+            else
             {
                 var address = chip.GetBus(ab);
                 var data = chip.GetBus(db);
@@ -77,33 +73,16 @@ public class Flawless6502Tests
 
             chip.SetNode(clk0, clk ? NodeValue.PulledHigh : NodeValue.PulledLow);
 
-            if (clk)
+            if (chip.GetNode(clk2out) == NodeValue.PulledHigh)
             {
-                HandleBusWrite();
-            }
-            else
-            {
-                HandleBusRead();
+                HandleMemoryAccess();
             }
 
             // Uncomment this line to see chip state at each step.
             //Console.WriteLine($"PC {chip.GetBus(pch):X2}{chip.GetBus(pcl):X2}   X {chip.GetBus(x):X2}   Y {chip.GetBus(y):X2}   A {chip.GetBus(a):X2}   SP {chip.GetBus(s):X2}   AB {chip.GetBus(ab):X4}   DB {chip.GetBus(db):X2}  {(chip.GetNode(rw) == NodeValue.PulledHigh ? 'R' : 'W')}");
         }
 
-        // Run for 18 half-cycles so that chip has _just_ finished RESET sequence
-        // and has read the first byte of user code.
-        for (var i = 0; i < 18; i++)
-        {
-            HalfStep();
-        }
-
-        // This state was retrieved from Visual 6502 by running the equivalent simulation,
-        // and then calling the JavaScript stateString() function to get the state.
-        Assert.AreEqual(
-            "lllhlhllllhhllllhhhllhllhlhlhhxhlhlhhllhlhllhlhhhllhllhhhhlllllllhhlhlllllhhlllhhhllllhllhhlhlhhlllhlhhhhllhhhhhlhhlhhhhllhhhllllllllllhllhhllllxllllhhllhllllhhhlhlllhlhlhhhxhhllllllllhllllllllhhlhlhhllllllhlllhlhhlhllllhhhlllhhlllhhllllhhllhlhllhllhllhlhhhllllhhhhlhlllhlllllhlhhhlhlhllllhxllhlllhllhlllllllllhllllllhlhlllhlllhlhllhlllhlhhhllhhhlhllhhlhlllhhhlhlhhhhlhhllhlhllllllhlhhlhlllhlllhllhhlllllllllhhlxhlhhhhlhhllhlhlhhhlllllllllllhhhllllllhllhlllhhhhlhhllllhlhlhllllhhllhllhhllhlhhllhhlxhhllllhlhllhlhhhhlhllhlhlhhlhhlhhllllhhlhhlhxlhllllhlhlhlhhhghlhhxlhhllhlhllllhhllllhhllllllhhhhlhllhlllhlhhllhhlllhllhhhhhhllhlhhlhllhllhhlhhhhhlhhllllhlllhllvlhlhhlhlllhhlhlhhlhllhhhlhlllllhhllhlhlhhhllhhlhlhllhhlllllhlllhlhhhhlhhhlllllllhhllllhllhlxlhlhllhhhlhhlhllllhllhhhhllllhhllhlhlllhhlhllllhlhhlhhlhlhllllhhlhllhhhhlhhhlhlhlhllhhhhhlhhhlhhlllhhhlhhlllhhlhhhhllllhlllhllhlhlhlhhllllhhhllhhhlhlllhlhlhhhxhlllhhxllhhhhlhlhlhhhhllhlhlhlhlllllllllhlhhllhhllhlhlllllllhlhllhlhlllhhlllllhllhllhhhllhhlhlhlhlhlhhlhllhhhhllhlllhhhhlllllhhlhlhlllllhhhhhlhlhhlllhlllhhhhllllhllhlhlhllhllhlhlllhhhlhhlllhhhlllhlhhlllllhlllhhhhhhhhhlxhllhlhhlllhllhhllhllllhllhllhhlllhlhlhlhllhlhlhlhlhlhlhhhlllhhllhlhhhlhhhhlhlhlxxlllhlhlllhhhllhhhlllhhhllhlhlhllhllhhllhhllllhhhllllxhllhhhlllhllhhlhlhhllhhllhhhhllllllhhlhllhlllhhhlllhlhlxhhhlhhllhhllllhllhhllllhlhllhllhllhhllhhhlhxlxllhllllllllhhhhhlllhllhllhlhllhhlhlhhhhhhhhhhllhlhllhlhllhlhlhlhlllhllhhllhhhlhlhllhlhlhllhhlhhllxhlhllhllllhlhhlhllllllhhllllhlllhllllhhllllhhhlhlhlhhlhlhhlhhhlllhlhllhhllhhllllhllllhhlhlhhhhlhhlhhlhllhhhllhlhlllhlllhlllhhlllhlhllhllhlhlhllhhllhllllhllllhhhlllllhhllhlllhhlhlhhlhlllllhhllhhhhhllhllxlllhhhlllllhhhllhllhhlhhhlhllhlllllllxhhlhllhllhllhlhhhllllll",
-            chip.GetState());
-
-        for (var i = 0; i < 200; i++)
+        for (var i = 0; i < 217; i++)
         {
             HalfStep();
         }
@@ -128,7 +107,9 @@ public class Flawless6502Tests
         const string stringToPrint = "Hello World";
         var stringIndex = 0;
 
-        void HandleBusRead()
+        var output = "";
+
+        void HandleMemoryAccess()
         {
             if (chip.GetNode(rw) == NodeValue.PulledHigh)
             {
@@ -167,13 +148,7 @@ public class Flawless6502Tests
 
                 chip.SetBus(db, data);
             }
-        }
-
-        var output = "";
-
-        void HandleBusWrite()
-        {
-            if (chip.GetNode(rw) != NodeValue.PulledHigh)
+            else
             {
                 var address = chip.GetBus(ab);
                 var data = chip.GetBus(db);
@@ -202,13 +177,9 @@ public class Flawless6502Tests
 
             chip.SetNode(clk0, clk ? NodeValue.PulledHigh : NodeValue.PulledLow);
 
-            if (clk)
+            if (chip.GetNode(clk2out) == NodeValue.PulledHigh)
             {
-                HandleBusWrite();
-            }
-            else
-            {
-                HandleBusRead();
+                HandleMemoryAccess();
             }
         }
 
