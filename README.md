@@ -13,9 +13,10 @@ FlawlessChips's intended audience is emulator authors who want to run their emul
 
 ## Simulated chips
 
-* 6502 - `FlawlessChips.Flawless6502`
-* 2A03 - `FlawlessChips.Flawless2A03`
-* 2C02 - `FlawlessChips.Flawless2C02`
+* [MOS Technology 6502](https://en.wikipedia.org/wiki/MOS_Technology_6502) - `FlawlessChips.Flawless6502`
+* [Ricoh 2A03](https://www.nesdev.org/wiki/CPU) - `FlawlessChips.Flawless2A03`
+* [Ricoh 2C02](https://www.nesdev.org/wiki/PPU) - `FlawlessChips.Flawless2C02`
+* [Zilog Z80](https://en.wikipedia.org/wiki/Zilog_Z80) - `FlawlessChips.FlawlessZ80`
 
 ## Install
 
@@ -32,6 +33,9 @@ var chip = new Flawless6502();
 // Calling this method is optional; you can perform this setup
 // in your own code.
 chip.Startup();
+
+// Create 64K of memory for the chip to work with.
+var memory = new byte[ushort.MaxValue + 1];
 
 // Loop a few times.
 for (var i = 0; i < 100; i++)
@@ -95,6 +99,8 @@ for their efforts in photographing chips, analyzing circuits, and writing the si
 
 * [Visual 2C02](https://www.qmtpro.com/~nes/chipimages/visual2c02/) by [quietust](https://www.qmtpro.com/)
   * with additional inspiration from [VisualNES](https://github.com/SourMesen/VisualNes) by [SourMesen](https://github.com/SourMesen)
+
+* [Visual Z80](http://www.visual6502.org/JSSim/expert-z80.html), authorship unknown, perhaps Greg James, Brian Silverman, and Barry Silverman
 
 The logo is a modified version of the [chips](https://thenounproject.com/icon/chips-4719557/) icon by [pictranoosa](https://thenounproject.com/ihsannugroho/), and the [perfect](https://thenounproject.com/icon/perfect-1221120/) icon by [Paffi](https://thenounproject.com/paffi/).
 

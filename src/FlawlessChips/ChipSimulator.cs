@@ -85,8 +85,8 @@ public class ChipSimulator
 
         var result = new List<SegmentDefinition>();
 
-        const int maxCoordinates = 1100;
-        var coordinates = new ushort[maxCoordinates];
+        const int maxCoordinates = 7000;
+        var coordinates = new float[maxCoordinates];
 
         string? rawLine;
         while ((rawLine = streamReader.ReadLine()) != null)
@@ -106,7 +106,7 @@ public class ChipSimulator
 
             for (var j = 0; j < numCoordinates; j++)
             {
-                coordinates[j] = ushort.Parse(line[j + 3]);
+                coordinates[j] = float.Parse(line[j + 3]);
             }
 
             var area = coordinates[numCoordinates - 2] * coordinates[1] - coordinates[0] * coordinates[numCoordinates - 1];
@@ -124,7 +124,7 @@ public class ChipSimulator
                 ushort.Parse(line[0]),
                 line[1] == "+",
                 byte.Parse(line[2]),
-                area);
+                (int)area);
 
             result.Add(segmentDefinition);
         }
@@ -132,7 +132,7 @@ public class ChipSimulator
         return result;
     }
 
-    private static List<TransistorDefinition> ReadTransistorDefinitions(string transistorDefinitionsResourceName)
+    private List<TransistorDefinition> ReadTransistorDefinitions(string transistorDefinitionsResourceName)
     {
         using var stream = typeof(ChipSimulator).Assembly.GetManifestResourceStream(transistorDefinitionsResourceName)!;
         using var streamReader = new StreamReader(stream);
@@ -143,6 +143,11 @@ public class ChipSimulator
         while ((line = streamReader.ReadLine()) != null)
         {
             if (line == "" || line.StartsWith("//", StringComparison.InvariantCultureIgnoreCase))
+            {
+                continue;
+            }
+
+            if (ShouldSkipTransistorDefinition(line))
             {
                 continue;
             }
@@ -159,6 +164,8 @@ public class ChipSimulator
 
         return result;
     }
+
+    protected virtual bool ShouldSkipTransistorDefinition(string line) => false;
 
     private void SetupNodes(List<SegmentDefinition> segmentDefinitions)
     {
@@ -421,33 +428,13 @@ public class ChipSimulator
 
         if ((_groupState & GroupState.ContainsHi) != 0)
         {
-            var areaHi = 0;
-            var areaLo = 0;
-            foreach (var nn in _group)
-            {
-                ref readonly var n = ref _nodes[nn];
-
-                // If we get here, we know that none of the nodes
-                // in the group are gnd, pwr, pullup, or pulldown.
-                switch (n.State)
-                {
-                    case NodeValue.PulledHigh:
-                        areaHi += n.Area;
-                        break;
-
-                    case NodeValue.PulledLow:
-                    case NodeValue.Floating: // Not quite right.
-                        areaLo += n.Area;
-                        break;
-                }
-            }
-            return areaHi > areaLo
-                ? NodeValue.PulledHigh
-                : NodeValue.PulledLow;
+            return GetNodeValueForAmbiguousGroup(_group, _nodes);
         }
 
         return NodeValue.Floating;
     }
+
+    protected virtual NodeValue GetNodeValueForAmbiguousGroup(List<NodeId> group, Node[] nodes) => NodeValue.PulledHigh;
 
     public void StabilizeChip()
     {

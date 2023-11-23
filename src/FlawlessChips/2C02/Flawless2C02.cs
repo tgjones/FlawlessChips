@@ -11,6 +11,35 @@ public sealed partial class Flawless2C02 : ChipSimulator
     {
     }
 
+    protected override NodeValue GetNodeValueForAmbiguousGroup(List<NodeId> group, Node[] nodes)
+    {
+        var areaHi = 0;
+        var areaLo = 0;
+
+        foreach (var nn in group)
+        {
+            ref readonly var n = ref nodes[nn];
+
+            // If we get here, we know that none of the nodes
+            // in the group are gnd, pwr, pullup, or pulldown.
+            switch (n.State)
+            {
+                case NodeValue.PulledHigh:
+                    areaHi += n.Area;
+                    break;
+
+                case NodeValue.PulledLow:
+                case NodeValue.Floating: // Not quite right.
+                    areaLo += n.Area;
+                    break;
+            }
+        }
+
+        return areaHi > areaLo
+            ? NodeValue.PulledHigh
+            : NodeValue.PulledLow;
+    }
+
     protected override void OverrideGroupState(ref GroupState groupState, List<NodeId> group)
     {
         if ((groupState & GroupState.ContainsGnd) != 0 && (groupState & GroupState.ContainsPwr) != 0)
