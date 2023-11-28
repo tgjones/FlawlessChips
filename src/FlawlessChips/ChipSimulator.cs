@@ -109,10 +109,19 @@ public class ChipSimulator
                 coordinates[j] = float.Parse(line[j + 3]);
             }
 
-            var area = coordinates[numCoordinates - 2] * coordinates[1] - coordinates[0] * coordinates[numCoordinates - 1];
-            for (var j = 0; j < numCoordinates - 2; j += 2)
+            var area = 0.0f;
+            if (numCoordinates > 0)
             {
-                area += coordinates[j] * coordinates[j + 3] - coordinates[j + 2] * coordinates[j + 1];
+                area = coordinates[numCoordinates - 2] * coordinates[1] - coordinates[0] * coordinates[numCoordinates - 1];
+                for (var j = 0; j < numCoordinates - 2; j += 2)
+                {
+                    area += coordinates[j] * coordinates[j + 3] - coordinates[j + 2] * coordinates[j + 1];
+                }
+
+                if (area < 0)
+                {
+                    area = -area;
+                }
             }
 
             if (area < 0)

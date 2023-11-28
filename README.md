@@ -17,6 +17,7 @@ FlawlessChips's intended audience is emulator authors who want to run their emul
 * [Ricoh 2A03](https://www.nesdev.org/wiki/CPU) - `FlawlessChips.Flawless2A03`
 * [Ricoh 2C02](https://www.nesdev.org/wiki/PPU) - `FlawlessChips.Flawless2C02`
 * [Zilog Z80](https://en.wikipedia.org/wiki/Zilog_Z80) - `FlawlessChips.FlawlessZ80`
+* [Atari 2600 TIA](https://en.wikipedia.org/wiki/Television_Interface_Adaptor) - `FlawlessChips.FlawlessTia`
 
 ## Install
 
@@ -101,6 +102,8 @@ for their efforts in photographing chips, analyzing circuits, and writing the si
   * with additional inspiration from [VisualNES](https://github.com/SourMesen/VisualNes) by [SourMesen](https://github.com/SourMesen)
 
 * [Visual Z80](http://www.visual6502.org/JSSim/expert-z80.html), authorship unknown, perhaps Greg James, Brian Silverman, and Barry Silverman
+
+* [Sim2600](https://github.com/gregjames/Sim2600) by [Greg James](https://github.com/gregjames)
 
 The logo is a modified version of the [chips](https://thenounproject.com/icon/chips-4719557/) icon by [pictranoosa](https://thenounproject.com/ihsannugroho/), and the [perfect](https://thenounproject.com/icon/perfect-1221120/) icon by [Paffi](https://thenounproject.com/paffi/).
 
