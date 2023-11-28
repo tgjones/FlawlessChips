@@ -217,13 +217,7 @@ public class ChipSimulator
             if (c1 == _nodeGnd) { c1 = c2; c2 = _nodeGnd; }
             if (c1 == _nodePwr) { c1 = c2; c2 = _nodePwr; }
 
-            var transistor = new Transistor
-            {
-                On = false,
-                Gate = gate,
-                C1 = c1,
-                C2 = c2,
-            };
+            var transistor = new Transistor(gate, c1, c2);
 
             _nodes[gate].Gates.Add(transistor);
             _nodes[c1].C1C2s.Add(transistor);
@@ -245,10 +239,10 @@ public class ChipSimulator
         _nodes[_nodeGnd].State = NodeValue.PulledLow;
         _nodes[_nodePwr].State = NodeValue.PulledHigh;
 
-        // Turn on all transistors connected to VCC, and turn off the rest
-        foreach (var transistor in _transistors)
+        // Turn on all transistors connected to VCC.
+        foreach (var transistor in _nodes[_nodePwr].Gates)
         {
-            transistor.On = transistor.Gate == _nodePwr;
+            transistor.On = true;
         }
     }
 
