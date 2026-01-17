@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="FlawlessChips.Tests/FlawlessChips.Tests.csproj" />
+  <Project Path="FlawlessChips/FlawlessChips.csproj" />
+</Solution>
