@@ -1,5 +1,5 @@
 [msbuild]
-project = ["FlawlessChips.sln"]
+project = ["FlawlessChips.slnx"]
 [github]
 user = "tgjones"
 repo = "FlawlessChips"
