@@ -1,5 +1,3 @@
-using NUnit.Framework;
-
 using static FlawlessChips.Flawless2C02.NodeIds;
 
 namespace FlawlessChips.Tests;
@@ -7,7 +5,7 @@ namespace FlawlessChips.Tests;
 public class Flawless2C02Tests
 {
     [Test]
-    public void TestStartupStateUntilScanline240MatchesVisual2C02()
+    public async Task TestStartupStateUntilScanline240MatchesVisual2C02()
     {
         var chip = new Flawless2C02();
 
@@ -34,11 +32,11 @@ public class Flawless2C02Tests
 
         var actualState = chip.GetState();
 
-        Assert.AreEqual(expectedState, actualState);
+        await Assert.That(actualState).IsEqualTo(expectedState);
     }
 
     [Test]
-    public void TestPreRenderEvenStateUntilNextFrameMatchesVisual2C02()
+    public async Task TestPreRenderEvenStateUntilNextFrameMatchesVisual2C02()
     {
         var chip = new Flawless2C02();
 
@@ -62,7 +60,7 @@ public class Flawless2C02Tests
 
         var actualState = chip.GetState();
 
-        Assert.AreEqual(expectedState, actualState);
+        await Assert.That(actualState).IsEqualTo(expectedState);
     }
 
     // TODO: Refactor this.
