@@ -2,7 +2,7 @@ using static FlawlessChips.FlawlessTia.NodeIds;
 
 namespace FlawlessChips;
 
-public sealed partial class FlawlessTia : ChipSimulator
+internal sealed partial class FlawlessTia : ChipSimulator
 {
     public FlawlessTia()
         : base("Tia", VSS, VCC)
