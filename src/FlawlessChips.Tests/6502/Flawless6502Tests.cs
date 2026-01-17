@@ -80,7 +80,7 @@ public class Flawless6502Tests
 
             // Uncomment this line to see chip state at each step.
             //Console.WriteLine(
-            //    "Φ2 {0}   PC {1:X4}   X {2:X2}   Y {3:X2}   A {4:X2}   SP {5:X2}   AB {6:X4}   DB {7:X2}   RW {8}",
+            //    "Φ2 {0}   PC {1:X4}   X {2:X2}   Y {3:X2}   A {4:X2}   SP {5:X2}   AB {6:X4}   DB {7:X2}   RW {8}   SYNC {9}",
             //    chip.IsHigh(clk2out) ? '1' : '0',
             //    chip.GetPC(),
             //    chip.GetBus(x),
@@ -89,7 +89,8 @@ public class Flawless6502Tests
             //    chip.GetBus(s),
             //    chip.GetBus(ab),
             //    chip.GetBus(db),
-            //    chip.IsHigh(rw) ? '1' : '0');
+            //    chip.IsHigh(rw) ? '1' : '0',
+            //    chip.IsHigh(sync) ? '1' : '0');
         }
 
         for (var i = 0; i < 217; i++)
