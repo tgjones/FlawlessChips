@@ -3,3 +3,5 @@ project = ["FlawlessChips.slnx"]
 [github]
 user = "tgjones"
 repo = "FlawlessChips"
+[test]
+enable = false # dotnet-releaser doesn't yet work with Microsoft.Testing.Platform
