@@ -1026,5 +1026,101 @@ partial class Flawless6502
             p6,
             p7,
         ]);
+
+        public static readonly NodeBus<byte> adl = new(
+        [
+            adl0,
+            adl1,
+            adl2,
+            adl3,
+            adl4,
+            adl5,
+            adl6,
+            adl7,
+        ]);
+
+        public static readonly NodeBus<byte> adh = new(
+        [
+            adh0,
+            adh1,
+            adh2,
+            adh3,
+            adh4,
+            adh5,
+            adh6,
+            adh7,
+        ]);
+
+        public static readonly NodeBus<byte> dor = new(
+        [
+            dor0,
+            dor1,
+            dor2,
+            dor3,
+            dor4,
+            dor5,
+            dor6,
+            dor7,
+        ]);
+
+        public static readonly NodeBus<byte> notdor = new(
+        [
+            notdor0,
+            notdor1,
+            notdor2,
+            notdor3,
+            notdor4,
+            notdor5,
+            notdor6,
+            notdor7,
+        ]);
+
+        public static readonly NodeBus<byte> abl = new(
+        [
+            abl0,
+            abl1,
+            abl2,
+            abl3,
+            abl4,
+            abl5,
+            abl6,
+            abl7,
+        ]);
+
+        public static readonly NodeBus<byte> abh = new(
+        [
+            abh0,
+            abh1,
+            abh2,
+            abh3,
+            abh4,
+            abh5,
+            abh6,
+            abh7,
+        ]);
+
+        public static readonly NodeBus<byte> ir = new(
+        [
+            ir0,
+            ir1,
+            ir2,
+            ir3,
+            ir4,
+            ir5,
+            ir6,
+            ir7,
+        ]);
+
+        public static readonly NodeBus<byte> alu = new(
+        [
+            alu0,
+            alu1,
+            alu2,
+            alu3,
+            alu4,
+            alu5,
+            alu6,
+            alu7,
+        ]);
     }
 }
