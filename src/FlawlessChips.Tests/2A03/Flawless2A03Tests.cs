@@ -97,7 +97,7 @@ public class Flawless2A03Tests
     [Test]
     public async Task TestApple1Basic()
     {
-        var apple1BasicBin = File.ReadAllBytes("6502/apple1basic.bin");
+        var apple1BasicBin = File.ReadAllBytes("2A03/Assets/apple1basic.bin");
         byte[] memory = new byte[ushort.MaxValue + 1];
         Array.Copy(apple1BasicBin, 0, memory, 0xE000, apple1BasicBin.Length);
 

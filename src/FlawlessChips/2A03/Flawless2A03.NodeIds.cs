@@ -2376,5 +2376,77 @@ partial class Flawless2A03
             p6,
             p7,
         ]);
+
+        public static readonly NodeBus<byte> spr_data = new(
+        [
+            spr_data0,
+            spr_data1,
+            spr_data2,
+            spr_data3,
+            spr_data4,
+            spr_data5,
+            spr_data6,
+            spr_data7,
+        ]);
+
+        public static readonly NodeBus<byte> spr__active_low_data = new(
+        [
+            spr__active_low_data0,
+            spr__active_low_data1,
+            spr__active_low_data2,
+            spr__active_low_data3,
+            spr__active_low_data4,
+            spr__active_low_data5,
+            spr__active_low_data6,
+            spr__active_low_data7,
+        ]);
+
+        public static readonly NodeBus<byte> sb = new(
+        [
+            sb0,
+            sb1,
+            sb2,
+            sb3,
+            sb4,
+            sb5,
+            sb6,
+            sb7,
+        ]);
+
+        public static readonly NodeBus<byte> dasb = new(
+        [
+            dasb0,
+            dasb1,
+            dasb2,
+            dasb3,
+            dasb4,
+            dasb5,
+            dasb6,
+            dasb7,
+        ]);
+
+        public static readonly NodeBus<byte> idb = new(
+        [
+            idb0,
+            idb1,
+            idb2,
+            idb3,
+            idb4,
+            idb5,
+            idb6,
+            idb7,
+        ]);
+
+        public static readonly NodeBus<byte> _db = new(
+        [
+            _db0,
+            _db1,
+            _db2,
+            _db3,
+            _db4,
+            _db5,
+            _db6,
+            _db7,
+        ]);
     }
 }

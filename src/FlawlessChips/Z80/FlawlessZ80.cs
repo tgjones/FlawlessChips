@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 using static FlawlessChips.FlawlessZ80.NodeIds;
 
 namespace FlawlessChips;
@@ -8,7 +5,7 @@ namespace FlawlessChips;
 public sealed partial class FlawlessZ80 : ChipSimulator
 {
     public FlawlessZ80()
-        : base("Z80", vss, vcc)
+        : base("Z80", typeof(NodeIds), vss, vcc)
     {
     }
 

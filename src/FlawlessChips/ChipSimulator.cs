@@ -1,10 +1,8 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using FlawlessChips.Utility;
 
 namespace FlawlessChips;
 
@@ -25,6 +23,9 @@ public class ChipSimulator
 
     private readonly List<NodeId> _group;
 
+    private readonly Type _nodeIdsType;
+    private ChipLogger? _logger;
+
     [Flags]
     protected enum GroupState
     {
@@ -40,11 +41,14 @@ public class ChipSimulator
 
     public ChipSimulator(
         string chipResourceName,
+        Type nodeIdsType,
         NodeId gnd,
         NodeId pwr)
     {
         _nodeGnd = gnd;
         _nodePwr = pwr;
+
+        _nodeIdsType = nodeIdsType;
 
         var segmentDefinitions = ReadSegmentDefinitions($"FlawlessChips.{chipResourceName}.SegmentDefinitions.txt");
 
@@ -147,11 +151,12 @@ public class ChipSimulator
         using var streamReader = new StreamReader(stream);
 
         var result = new List<TransistorDefinition>();
+        var existingTransistors = new HashSet<TransistorDefinition>();
 
         string? line;
         while ((line = streamReader.ReadLine()) != null)
         {
-            if (line == "" || line.StartsWith("//", StringComparison.InvariantCultureIgnoreCase))
+            if (line == "" || line.StartsWith("//", StringComparison.InvariantCultureIgnoreCase) || line.StartsWith("#", StringComparison.InvariantCultureIgnoreCase))
             {
                 continue;
             }
@@ -163,12 +168,20 @@ public class ChipSimulator
 
             var splitLine = line.Split(',');
 
+            var c1 = ushort.Parse(splitLine[2]);
+            var c2 = ushort.Parse(splitLine[3]);
+
+            if (c1 == _nodeGnd) { c1 = c2; c2 = _nodeGnd; }
+            if (c1 == _nodePwr) { c1 = c2; c2 = _nodePwr; }
+
             var transistorDefinition = new TransistorDefinition(
                 ushort.Parse(splitLine[1]),
-                ushort.Parse(splitLine[2]),
-                ushort.Parse(splitLine[3]));
+                c1, c2);
 
-            result.Add(transistorDefinition);
+            if (existingTransistors.Add(transistorDefinition))
+            {
+                result.Add(transistorDefinition);
+            }
         }
 
         return result;
@@ -214,9 +227,6 @@ public class ChipSimulator
             var c1 = transistorDefinition.C1;
             var c2 = transistorDefinition.C2;
 
-            if (c1 == _nodeGnd) { c1 = c2; c2 = _nodeGnd; }
-            if (c1 == _nodePwr) { c1 = c2; c2 = _nodePwr; }
-
             var transistor = new Transistor(gate, c1, c2);
 
             _nodes[gate].Gates.Add(transistor);
@@ -250,6 +260,8 @@ public class ChipSimulator
     {
         for (var j = 0; j < 100; j++) // Prevent infinite loops
         {
+            _logger?.BeginIteration(j);
+
             (_recalcListOut, _recalcListIn) = (_recalcListIn, _recalcListOut);
 
             _recalcListOut.Clear();
@@ -264,6 +276,8 @@ public class ChipSimulator
             {
                 RecalcNode(item);
             }
+
+            _logger?.EndIteration();
         }
 
         throw new Exception("Encountered loop while updating");
@@ -271,9 +285,13 @@ public class ChipSimulator
 
     private void RecalcNode(NodeId nodeId)
     {
+        _logger?.BeginRecalcNode(nodeId);
+
         GetNodeGroup(nodeId);
 
         var newState = GetNodeValue();
+
+        _logger?.SetGroupState(_groupState, newState);
 
         foreach (var i in _group)
         {
@@ -286,6 +304,7 @@ public class ChipSimulator
 
             n.State = newState;
 
+            // Loop through all the transistors that this node is the gate for.
             foreach (var t in n.Gates)
             {
                 if (n.State == NodeValue.PulledHigh)
@@ -298,6 +317,8 @@ public class ChipSimulator
                 }
             }
         }
+
+        _logger?.EndRecalcNode();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -307,6 +328,8 @@ public class ChipSimulator
         {
             return;
         }
+
+        _logger?.AddAffectedTransistor(t, true);
 
         t.On = true;
 
@@ -320,6 +343,8 @@ public class ChipSimulator
         {
             return;
         }
+
+        _logger?.AddAffectedTransistor(t, false);
 
         t.On = false;
 
@@ -347,11 +372,14 @@ public class ChipSimulator
     {
         _group.Clear();
         _groupState = GroupState.ContainsNothing;
+
         AddNodeToGroup(nodeId);
     }
 
     private void AddNodeToGroup(NodeId nodeId)
     {
+        _logger?.AddNodeToGroup(nodeId, _nodes[nodeId].State);
+
         if (nodeId == _nodeGnd)
         {
             _groupState |= GroupState.ContainsGnd;
@@ -388,17 +416,23 @@ public class ChipSimulator
             _groupState |= GroupState.ContainsHi;
         }
 
+        // Loop through all the transistors that this node is connected to as C1 or C2.
         foreach (var t in node.C1C2s)
         {
+            // If the transistor is off, it doesn't connect nodes,
+            // so this node's change of state has no effect on nodes
+            // that are the other side of a transistor gate.
             if (!t.On)
             {
                 continue;
             }
 
+            // Figure out which is the "other" side of the transistor.
             NodeId other;
             if (t.C1 == nodeId) other = t.C2;
             else if (t.C2 == nodeId) other = t.C1;
             else throw new InvalidOperationException();
+
             AddNodeToGroup(other);
         }
     }
@@ -537,8 +571,10 @@ public class ChipSimulator
     public void SetHigh(NodeId nodeId) => SetNode(nodeId, NodeValue.PulledHigh);
     public void SetLow(NodeId nodeId) => SetNode(nodeId, NodeValue.PulledLow);
 
-    private void SetNodes(Span<NodeId> nodeIds, Span<NodeValue> values)
+    private void SetNodes(ReadOnlySpan<NodeId> nodeIds, ReadOnlySpan<NodeValue> values)
     {
+        _logger?.BeginNodes(nodeIds);
+
         for (var i = 0; i < nodeIds.Length; i++)
         {
             var nodeId = nodeIds[i];
@@ -556,6 +592,8 @@ public class ChipSimulator
         }
 
         RecalcNodeList();
+
+        _logger?.EndNodes();
     }
 
     public NodeValue GetNode(NodeId nodeId) => _nodes[nodeId].State;
@@ -634,5 +672,199 @@ public class ChipSimulator
         _recalcListOut.Add(n1);
 
         RecalcNodeList();
+    }
+
+    public IDisposable BeginLogging(string filePath, NodeId nodeToTrace)
+    {
+        if (_logger != null)
+        {
+            throw new InvalidOperationException("Logging is already enabled.");
+        }
+
+        return new ChipLogger(this, filePath, nodeToTrace);
+    }
+
+    private sealed class ChipLogger : IDisposable
+    {
+        private readonly ChipSimulator _chipSimulator;
+        private readonly StreamWriter _streamWriter;
+        private readonly NodeId _nodeToTrace;
+
+        private readonly List<NodeId> _nodes = new();
+        private readonly List<RecalcNodesIteration> _iterations = new();
+        private RecalcNodesIteration? _currentIteration;
+        private RecalcNode? _currentRecalcNode;
+
+        private int _indentLevel;
+
+        public ChipLogger(ChipSimulator chipSimulator, string filePath, NodeId nodeToTrace)
+        {
+            _chipSimulator = chipSimulator;
+            _streamWriter = new StreamWriter(filePath);
+            _nodeToTrace = nodeToTrace;
+
+            chipSimulator._logger = this;
+        }
+
+        public void BeginNodes(ReadOnlySpan<NodeId> nodeIds)
+        {
+            _nodes.AddRange(nodeIds);
+        }
+
+        public void BeginIteration(int iteration)
+        {
+            _currentIteration = new RecalcNodesIteration(iteration);
+        }
+
+        public void BeginRecalcNode(NodeId nodeId)
+        {
+            _currentRecalcNode = new RecalcNode(nodeId);
+        }
+
+        public void AddNodeToGroup(NodeId nodeId, NodeValue currentValue)
+        {
+            if (!_currentRecalcNode!.Group.Any(x => x.Item1 == nodeId))
+            {
+                _currentRecalcNode!.Group.Add((nodeId, currentValue));
+            }
+        }
+
+        public void SetGroupState(GroupState currentGroupState, NodeValue newGroupState)
+        {
+            _currentRecalcNode!.CurrentGroupState = currentGroupState;
+            _currentRecalcNode!.NewGroupState = newGroupState;
+        }
+
+        public void AddAffectedTransistor(Transistor transistor, bool turnedOn)
+        {
+            _currentRecalcNode!.AffectedTransistors.Add((transistor, turnedOn));
+        }
+
+        public void EndRecalcNode()
+        {
+            _currentIteration!.RecalcNodes.Add(_currentRecalcNode!);
+            _currentRecalcNode = null;
+        }
+
+        public void EndIteration()
+        {
+            _iterations.Add(_currentIteration!);
+            _currentIteration = null;
+        }
+
+        public void EndNodes()
+        {
+            // Search backwards through iterations for everything that affected _nodeToTrace
+
+            var interestingNodeIds = new HashSet<NodeId>();
+            interestingNodeIds.Add(_nodeToTrace);
+
+            var filteredIterations = new List<RecalcNodesIteration>();
+
+            for (var i = _iterations.Count - 1; i >= 0; i--)
+            {
+                var iteration = _iterations[i];
+
+                var filteredRecalcNodes = new List<RecalcNode>();
+
+                for (var j = iteration.RecalcNodes.Count - 1; j >= 0; j--)
+                {
+                    var recalcNode = iteration.RecalcNodes[j];
+
+                    // Did this recalcNode turn on or off an interesting node?
+                    var affectedInterestingTransistors = recalcNode
+                        .AffectedTransistors
+                        .Any(x => interestingNodeIds.Contains(x.Item1.C1) || interestingNodeIds.Contains(x.Item1.C2));
+
+                    if (interestingNodeIds.Contains(recalcNode.NodeId) || affectedInterestingTransistors)
+                    {
+                        interestingNodeIds.Add(recalcNode.NodeId);
+                        filteredRecalcNodes.Insert(0, recalcNode);
+                    }
+                }
+
+                if (filteredRecalcNodes.Count > 0)
+                {
+                    var filteredIteration = new RecalcNodesIteration(iteration.Iteration);
+                    filteredIteration.RecalcNodes.AddRange(filteredRecalcNodes);
+                    filteredIterations.Insert(0, filteredIteration);
+                }
+            }
+
+            // Write it to log.
+
+            foreach (var iteration in filteredIterations)
+            {
+                WriteLine($"Iteration {iteration.Iteration}");
+                PushIndentLevel();
+                foreach (var recalcNode in iteration.RecalcNodes)
+                {
+                    WriteLine($"Recalc Node {GetNodeName(recalcNode.NodeId)}:");
+                    PushIndentLevel();
+
+                    WriteLine($"Group Nodes:");
+                    PushIndentLevel();
+                    foreach (var (groupNodeId, groupNodeValue) in recalcNode.Group)
+                    {
+                        WriteLine($"- {GetNodeName(groupNodeId)}: {groupNodeValue}");
+                    }
+                    PopIndentLevel();
+
+                    WriteLine($"Current Group State: {recalcNode.CurrentGroupState}");
+                    WriteLine($"New Group State:     {recalcNode.NewGroupState}");
+
+                    WriteLine("Affected Transistors:");
+                    PushIndentLevel();
+                    foreach (var affectedTransistor in recalcNode.AffectedTransistors)
+                    {
+                        var (transistor, turnedOn) = affectedTransistor;
+                        WriteLine($"- Transistor {(turnedOn ? "On" : "Off")}: {transistor.ToDisplayString(_chipSimulator._nodeIdsType)}");
+                    }
+                    PopIndentLevel();
+
+                    PopIndentLevel();
+                }
+                PopIndentLevel();
+            }
+
+            _iterations.Clear();
+            _nodes.Clear();
+        }
+
+        private string GetNodeName(NodeId nodeId)
+        {
+            return LoggingUtility.GetNodeName(nodeId, _chipSimulator._nodeIdsType);
+        }
+
+        private void WriteLine(string line)
+        {
+            _streamWriter.WriteLine(new string(' ', _indentLevel * 4) + line);
+        }
+
+        private void PushIndentLevel() => _indentLevel++;
+
+        private void PopIndentLevel() => _indentLevel--;
+
+        public void Dispose()
+        {
+            _streamWriter.Dispose();
+            _chipSimulator._logger = null;
+        }
+
+        private sealed class RecalcNodesIteration(int iteration)
+        {
+            public List<RecalcNode> RecalcNodes = [];
+
+            public int Iteration => iteration;
+        }
+
+        private sealed class RecalcNode(NodeId nodeId)
+        {
+            public NodeId NodeId => nodeId;
+            public List<(NodeId, NodeValue)> Group { get; } = [];
+            public GroupState CurrentGroupState { get; set; }
+            public NodeValue NewGroupState { get; set; }
+            public List<(Transistor, bool)> AffectedTransistors { get; } = [];
+        }
     }
 }

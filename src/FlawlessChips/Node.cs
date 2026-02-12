@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace FlawlessChips;
 
 public struct Node
@@ -16,8 +14,16 @@ public struct Node
     /// </summary>
     public NodeValue State;
 
+    /// <summary>
+    /// All the transistors for which this node is the gate.
+    /// </summary>
     public List<Transistor> Gates;
+
+    /// <summary>
+    /// All the transistors for which this node is C1 or C2.
+    /// </summary>
     public List<Transistor> C1C2s;
+
     public int Area;
 }
 

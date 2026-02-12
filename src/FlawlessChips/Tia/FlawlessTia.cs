@@ -5,7 +5,7 @@ namespace FlawlessChips;
 internal sealed partial class FlawlessTia : ChipSimulator
 {
     public FlawlessTia()
-        : base("Tia", VSS, VCC)
+        : base("Tia", typeof(NodeIds), VSS, VCC)
     {
     }
 
