@@ -196,4 +196,121 @@ public class Flawless2A03Tests
 
         await Assert.That(output).IsEqualTo("\r>Hello World");
     }
+
+    [Test]
+    public async Task NesTest()
+    {
+        byte[] rom;
+        using (var reader = new BinaryReader(File.OpenRead("2A03/Assets/nestest.nes")))
+        {
+            reader.BaseStream.Seek(16, SeekOrigin.Current);
+            rom = reader.ReadBytes(16384);
+        }
+
+        // Patch the test start address into the RESET vector.
+        rom[0x3FFC] = 0x00;
+        rom[0x3FFD] = 0xC0;
+
+        var ram = new byte[0x0800];
+
+        // APU and I/O registers - for the purposes of this test, treat them as RAM.
+        var apu = new byte[0x18];
+
+        var chip = new Flawless2A03();
+        chip.Startup();
+
+        void HandleMemoryAccess()
+        {
+            if (chip.IsHigh(rw))
+            {
+                var address = chip.GetBus(ab);
+
+                var data = address switch
+                {
+                    _ when address <= 0x1FFF => ram[address & 0x07FF],
+                    _ when address >= 0x4000 && address <= 0x4017 => apu[address - 0x4000],
+                    _ when address >= 0x8000 && address <= 0xFFFF => rom[address - 0x8000 & 0x3FFF],
+                    _ => rom[address - 0x4000]
+                };
+
+                chip.SetBus(db, data);
+            }
+            else
+            {
+                var address = chip.GetBus(ab);
+                var data = chip.GetBus(db);
+
+                switch (address)
+                {
+                    case var _ when address <= 0x1FFF:
+                        ram[address & 0x07FF] = data;
+                        break;
+
+                    case var _ when address >= 0x4000 && address <= 0x4017:
+                        apu[address - 0x4000] = data;
+                        break;
+                }
+            }
+        }
+
+        var clk = false;
+        var cycle = 0;
+
+        using var writer = new StreamWriter("nestest_trace.log");
+
+        while (true)
+        {
+            var cpuClk = chip.IsHigh(clk0);
+
+            clk = !clk;
+
+            // TODO: Just for testing.
+            if (chip.GetPC() == 0xC5FF)
+            {
+                // Debug this.
+            }
+
+            using (cycle == 627 ? chip.BeginLogging("nestest_transistor_trace.log", c_db4) : null)
+            {
+                chip.SetNode(clk_in, clk ? NodeValue.PulledHigh : NodeValue.PulledLow);
+            }
+
+            if (cycle == 627)
+            {
+                //break;
+            }
+
+            writer.WriteLine(
+                "Clock {0}/{1}/{2}   PC {3:X4}   X {4:X2}   Y {5:X2}   A {6:X2}   SP {7:X2}   AB {8:X4}   DB {9:X2}   RW {10}   RES {11}   SYNC {12}",
+                chip.IsHigh(clk_in) ? '1' : '0',
+                chip.IsHigh(phi2) ? '1' : '0',
+                chip.IsHigh(c_clk2out) ? '1' : '0',
+                chip.GetPC(),
+                chip.GetBus(x),
+                chip.GetBus(y),
+                chip.GetBus(a),
+                chip.GetBus(s),
+                chip.GetBus(ab),
+                chip.GetBus(db),
+                chip.IsHigh(rw) ? '1' : '0',
+                chip.IsHigh(res) ? '1' : '0',
+                chip.IsHigh(sync) ? '1' : '0');
+
+            // Only do memory accesses if CPU was just clocked and M2 is high.
+            if (cpuClk != chip.IsHigh(clk0) && chip.IsHigh(phi2))
+            {
+                if (chip.GetPC() == 0xC66E)
+                {
+                    break;
+                }
+
+                HandleMemoryAccess();
+            }
+
+            cycle++;
+        }
+
+        await Assert.That(ram[0x0002]).IsEqualTo((byte)0x000);
+        await Assert.That(ram[0x0003]).IsEqualTo((byte)0x000);
+    }
 }
