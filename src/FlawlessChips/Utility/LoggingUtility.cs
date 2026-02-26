@@ -21,7 +21,7 @@ internal static class LoggingUtility
 
                 nodeNames.TryAdd(
                     nodeIdValue,
-                    $"{nodeIdValue} ({nodeIdField.Name})");
+                    $"({nodeIdValue}):{nodeIdField.Name}");
             }
 
             NodeNamesCache[nodeIdsType] = nodeNames;
@@ -29,7 +29,7 @@ internal static class LoggingUtility
 
         if (!nodeNames.TryGetValue(nodeId, out var nodeName))
         {
-            nodeName = nodeId.ToString();
+            nodeName = $"({nodeId})";
             nodeNames[nodeId] = nodeName;
         }
 

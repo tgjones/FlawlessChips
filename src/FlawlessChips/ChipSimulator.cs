@@ -256,12 +256,14 @@ public class ChipSimulator
         }
     }
 
+    private bool _firstTime = true;
+
     public void RecalcNodeList()
     {
+        _logger?.Begin();
+
         for (var j = 0; j < 100; j++) // Prevent infinite loops
         {
-            _logger?.BeginIteration(j);
-
             (_recalcListOut, _recalcListIn) = (_recalcListIn, _recalcListOut);
 
             _recalcListOut.Clear();
@@ -269,8 +271,11 @@ public class ChipSimulator
 
             if (_recalcListIn.Count == 0)
             {
+                _logger?.End();
                 return;
             }
+
+            _logger?.BeginIteration(j);
 
             foreach (var item in _recalcListIn)
             {
@@ -280,7 +285,19 @@ public class ChipSimulator
             _logger?.EndIteration();
         }
 
-        throw new Exception("Encountered loop while updating");
+        _logger?.End();
+
+        if (_firstTime)
+        {
+            // Allow chip not to settle on first time. This is necessary for the TIA chip,
+            // because it has some nodes that appear to be in a cycle and never settle.
+            // TODO: Figure out if this is what it should actually be doing :)
+            _firstTime = false;
+        }
+        else
+        {
+            throw new Exception("Encountered loop while updating");
+        }
     }
 
     private void RecalcNode(NodeId nodeId)
@@ -326,6 +343,7 @@ public class ChipSimulator
     {
         if (t.On)
         {
+            _logger?.AddUnaffectedTransistor(t);
             return;
         }
 
@@ -341,6 +359,7 @@ public class ChipSimulator
     {
         if (!t.On)
         {
+            _logger?.AddUnaffectedTransistor(t);
             return;
         }
 
@@ -372,6 +391,8 @@ public class ChipSimulator
     {
         _group.Clear();
         _groupState = GroupState.ContainsNothing;
+
+        _logger?.SetNextNodeTransistorGate(null);
 
         AddNodeToGroup(nodeId);
     }
@@ -426,6 +447,8 @@ public class ChipSimulator
             {
                 continue;
             }
+
+            _logger?.SetNextNodeTransistorGate(t.Gate);
 
             // Figure out which is the "other" side of the transistor.
             NodeId other;
@@ -489,6 +512,7 @@ public class ChipSimulator
 
             _recalcListOut.Add(nodeId);
         }
+
         RecalcNodeList();
     }
 
@@ -573,8 +597,6 @@ public class ChipSimulator
 
     private void SetNodes(ReadOnlySpan<NodeId> nodeIds, ReadOnlySpan<NodeValue> values)
     {
-        _logger?.BeginNodes(nodeIds);
-
         for (var i = 0; i < nodeIds.Length; i++)
         {
             var nodeId = nodeIds[i];
@@ -592,8 +614,6 @@ public class ChipSimulator
         }
 
         RecalcNodeList();
-
-        _logger?.EndNodes();
     }
 
     public NodeValue GetNode(NodeId nodeId) => _nodes[nodeId].State;
@@ -674,7 +694,7 @@ public class ChipSimulator
         RecalcNodeList();
     }
 
-    public IDisposable BeginLogging(string filePath, NodeId nodeToTrace)
+    public IDisposable BeginLogging(string filePath, NodeId? nodeToTrace = null)
     {
         if (_logger != null)
         {
@@ -688,16 +708,17 @@ public class ChipSimulator
     {
         private readonly ChipSimulator _chipSimulator;
         private readonly StreamWriter _streamWriter;
-        private readonly NodeId _nodeToTrace;
+        private readonly NodeId? _nodeToTrace;
 
         private readonly List<NodeId> _nodes = new();
         private readonly List<RecalcNodesIteration> _iterations = new();
         private RecalcNodesIteration? _currentIteration;
         private RecalcNode? _currentRecalcNode;
+        private NodeId? _nextNodeTransistorGate;
 
         private int _indentLevel;
 
-        public ChipLogger(ChipSimulator chipSimulator, string filePath, NodeId nodeToTrace)
+        public ChipLogger(ChipSimulator chipSimulator, string filePath, NodeId? nodeToTrace)
         {
             _chipSimulator = chipSimulator;
             _streamWriter = new StreamWriter(filePath);
@@ -706,10 +727,7 @@ public class ChipSimulator
             chipSimulator._logger = this;
         }
 
-        public void BeginNodes(ReadOnlySpan<NodeId> nodeIds)
-        {
-            _nodes.AddRange(nodeIds);
-        }
+        public void Begin() { }
 
         public void BeginIteration(int iteration)
         {
@@ -725,8 +743,13 @@ public class ChipSimulator
         {
             if (!_currentRecalcNode!.Group.Any(x => x.Item1 == nodeId))
             {
-                _currentRecalcNode!.Group.Add((nodeId, currentValue));
+                _currentRecalcNode!.Group.Add((nodeId, _nextNodeTransistorGate, currentValue));
             }
+        }
+
+        public void SetNextNodeTransistorGate(NodeId? gate)
+        {
+            _nextNodeTransistorGate = gate;
         }
 
         public void SetGroupState(GroupState currentGroupState, NodeValue newGroupState)
@@ -738,6 +761,11 @@ public class ChipSimulator
         public void AddAffectedTransistor(Transistor transistor, bool turnedOn)
         {
             _currentRecalcNode!.AffectedTransistors.Add((transistor, turnedOn));
+        }
+
+        public void AddUnaffectedTransistor(Transistor transistor)
+        {
+            _currentRecalcNode!.UnaffectedTransistors.Add(transistor);
         }
 
         public void EndRecalcNode()
@@ -752,43 +780,53 @@ public class ChipSimulator
             _currentIteration = null;
         }
 
-        public void EndNodes()
+        public void End()
         {
             // Search backwards through iterations for everything that affected _nodeToTrace
 
-            var interestingNodeIds = new HashSet<NodeId>();
-            interestingNodeIds.Add(_nodeToTrace);
-
-            var filteredIterations = new List<RecalcNodesIteration>();
-
-            for (var i = _iterations.Count - 1; i >= 0; i--)
+            List<RecalcNodesIteration> filteredIterations;
+            if (_nodeToTrace != null)
             {
-                var iteration = _iterations[i];
-
-                var filteredRecalcNodes = new List<RecalcNode>();
-
-                for (var j = iteration.RecalcNodes.Count - 1; j >= 0; j--)
+                var interestingNodeIds = new HashSet<NodeId>
                 {
-                    var recalcNode = iteration.RecalcNodes[j];
+                    _nodeToTrace.Value
+                };
 
-                    // Did this recalcNode turn on or off an interesting node?
-                    var affectedInterestingTransistors = recalcNode
-                        .AffectedTransistors
-                        .Any(x => interestingNodeIds.Contains(x.Item1.C1) || interestingNodeIds.Contains(x.Item1.C2));
+                filteredIterations = new List<RecalcNodesIteration>();
 
-                    if (interestingNodeIds.Contains(recalcNode.NodeId) || affectedInterestingTransistors)
+                for (var i = _iterations.Count - 1; i >= 0; i--)
+                {
+                    var iteration = _iterations[i];
+
+                    var filteredRecalcNodes = new List<RecalcNode>();
+
+                    for (var j = iteration.RecalcNodes.Count - 1; j >= 0; j--)
                     {
-                        interestingNodeIds.Add(recalcNode.NodeId);
-                        filteredRecalcNodes.Insert(0, recalcNode);
+                        var recalcNode = iteration.RecalcNodes[j];
+
+                        // Did this recalcNode turn on or off an interesting node?
+                        var affectedInterestingTransistors = recalcNode
+                            .AffectedTransistors
+                            .Any(x => interestingNodeIds.Contains(x.Item1.C1) || interestingNodeIds.Contains(x.Item1.C2));
+
+                        if (interestingNodeIds.Contains(recalcNode.NodeId) || affectedInterestingTransistors)
+                        {
+                            interestingNodeIds.Add(recalcNode.NodeId);
+                            filteredRecalcNodes.Insert(0, recalcNode);
+                        }
+                    }
+
+                    if (filteredRecalcNodes.Count > 0)
+                    {
+                        var filteredIteration = new RecalcNodesIteration(iteration.Iteration);
+                        filteredIteration.RecalcNodes.AddRange(filteredRecalcNodes);
+                        filteredIterations.Insert(0, filteredIteration);
                     }
                 }
-
-                if (filteredRecalcNodes.Count > 0)
-                {
-                    var filteredIteration = new RecalcNodesIteration(iteration.Iteration);
-                    filteredIteration.RecalcNodes.AddRange(filteredRecalcNodes);
-                    filteredIterations.Insert(0, filteredIteration);
-                }
+            }
+            else
+            {
+                filteredIterations = _iterations;
             }
 
             // Write it to log.
@@ -804,14 +842,23 @@ public class ChipSimulator
 
                     WriteLine($"Group Nodes:");
                     PushIndentLevel();
-                    foreach (var (groupNodeId, groupNodeValue) in recalcNode.Group)
+                    foreach (var (groupNodeId, viaGateId, groupNodeValue) in recalcNode.Group)
                     {
-                        WriteLine($"- {GetNodeName(groupNodeId)}: {groupNodeValue}");
+                        var transistorGateSuffix = viaGateId != null ? $" (via transistor gate {GetNodeName(viaGateId.Value)})" : "";
+                        WriteLine($"- {GetNodeName(groupNodeId)}: {groupNodeValue}{transistorGateSuffix}");
                     }
                     PopIndentLevel();
 
                     WriteLine($"Current Group State: {recalcNode.CurrentGroupState}");
                     WriteLine($"New Group State:     {recalcNode.NewGroupState}");
+
+                    WriteLine("Unaffected Transistors:");
+                    PushIndentLevel();
+                    foreach (var transistor in recalcNode.UnaffectedTransistors)
+                    {
+                        WriteLine($"- Transistor: {transistor.ToDisplayString(_chipSimulator._nodeIdsType)}");
+                    }
+                    PopIndentLevel();
 
                     WriteLine("Affected Transistors:");
                     PushIndentLevel();
@@ -826,6 +873,8 @@ public class ChipSimulator
                 }
                 PopIndentLevel();
             }
+
+            WriteLine("****************");
 
             _iterations.Clear();
             _nodes.Clear();
@@ -847,6 +896,7 @@ public class ChipSimulator
 
         public void Dispose()
         {
+            _streamWriter.Flush();
             _streamWriter.Dispose();
             _chipSimulator._logger = null;
         }
@@ -861,10 +911,11 @@ public class ChipSimulator
         private sealed class RecalcNode(NodeId nodeId)
         {
             public NodeId NodeId => nodeId;
-            public List<(NodeId, NodeValue)> Group { get; } = [];
+            public List<(NodeId, NodeId?, NodeValue)> Group { get; } = [];
             public GroupState CurrentGroupState { get; set; }
             public NodeValue NewGroupState { get; set; }
             public List<(Transistor, bool)> AffectedTransistors { get; } = [];
+            public List<Transistor> UnaffectedTransistors { get; } = [];
         }
     }
 }
