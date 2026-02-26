@@ -62,7 +62,10 @@ public class ChipSimulator
         _nodes = new Node[maximumId + 1];
         for (var i = 0; i < _nodes.Length; i++)
         {
-            _nodes[i].NodeId = NullNodeId;
+            _nodes[i] = new Node
+            {
+                NodeId = NullNodeId
+            };
         }
 
         var transistorDefinitions = ReadTransistorDefinitions($"FlawlessChips.{chipResourceName}.TransistorDefinitions.txt");
@@ -172,7 +175,7 @@ public class ChipSimulator
             var c2 = ushort.Parse(splitLine[3]);
 
             if (c1 == _nodeGnd) { c1 = c2; c2 = _nodeGnd; }
-            if (c1 == _nodePwr) { c1 = c2; c2 = _nodePwr; }
+            else if (c1 == _nodePwr) { c1 = c2; c2 = _nodePwr; }
 
             var transistorDefinition = new TransistorDefinition(
                 ushort.Parse(splitLine[1]),
@@ -238,13 +241,6 @@ public class ChipSimulator
 
     private void InitializeNodesAndTransistors()
     {
-        // set all nodes to be floating
-        for (var i = 0; i < _nodes.Length; i++)
-        {
-            ref var node = ref _nodes[i];
-            node.State = NodeValue.Floating;
-        }
-
         // set GND and PWR to be driven high/low
         _nodes[_nodeGnd].State = NodeValue.PulledLow;
         _nodes[_nodePwr].State = NodeValue.PulledHigh;
