@@ -258,7 +258,7 @@ public class ChipSimulator
     {
         _logger?.Begin();
 
-        for (var j = 0; j < 100; j++) // Prevent infinite loops
+        for (var j = 0; j < 400; j++) // Prevent infinite loops
         {
             (_recalcListOut, _recalcListIn) = (_recalcListIn, _recalcListOut);
 
@@ -422,13 +422,11 @@ public class ChipSimulator
         {
             _groupState |= GroupState.ContainsPullup;
         }
-
-        if (node.Pulled == NodeValue.PulledLow)
+        else if (node.Pulled == NodeValue.PulledLow)
         {
             _groupState |= GroupState.ContainsPulldown;
         }
-
-        if (node.State == NodeValue.PulledHigh)
+        else if (node.State == NodeValue.PulledHigh)
         {
             _groupState |= GroupState.ContainsHi;
         }
@@ -577,7 +575,7 @@ public class ChipSimulator
         return result.ToString();
     }
 
-    public void SetNode(NodeId nodeId, NodeValue value)
+    public void SetNode(NodeId nodeId, NodeValue value, bool recalculate = true)
     {
         Span<NodeId> nodeIds = stackalloc NodeId[1];
         Span<NodeValue> values = stackalloc NodeValue[1];
@@ -585,13 +583,13 @@ public class ChipSimulator
         nodeIds[0] = nodeId;
         values[0] = value;
 
-        SetNodes(nodeIds, values);
+        SetNodes(nodeIds, values, recalculate);
     }
 
-    public void SetHigh(NodeId nodeId) => SetNode(nodeId, NodeValue.PulledHigh);
+    public void SetHigh(NodeId nodeId, bool recalculate = true) => SetNode(nodeId, NodeValue.PulledHigh, recalculate);
     public void SetLow(NodeId nodeId) => SetNode(nodeId, NodeValue.PulledLow);
 
-    private void SetNodes(ReadOnlySpan<NodeId> nodeIds, ReadOnlySpan<NodeValue> values)
+    private void SetNodes(ReadOnlySpan<NodeId> nodeIds, ReadOnlySpan<NodeValue> values, bool recalculate = true)
     {
         for (var i = 0; i < nodeIds.Length; i++)
         {
@@ -606,10 +604,16 @@ public class ChipSimulator
 
             node.Pulled = values[i];
 
-            _recalcListOut.Add(nodeId);
+            if (recalculate)
+            {
+                _recalcListOut.Add(nodeId);
+            }
         }
 
-        RecalcNodeList();
+        if (recalculate)
+        {
+            RecalcNodeList();
+        }
     }
 
     public NodeValue GetNode(NodeId nodeId) => _nodes[nodeId].State;
@@ -761,7 +765,7 @@ public class ChipSimulator
 
         public void AddUnaffectedTransistor(Transistor transistor)
         {
-            _currentRecalcNode!.UnaffectedTransistors.Add(transistor);
+            //_currentRecalcNode!.UnaffectedTransistors.Add(transistor);
         }
 
         public void EndRecalcNode()
@@ -840,7 +844,8 @@ public class ChipSimulator
                     PushIndentLevel();
                     foreach (var (groupNodeId, viaGateId, groupNodeValue) in recalcNode.Group)
                     {
-                        var transistorGateSuffix = viaGateId != null ? $" (via transistor gate {GetNodeName(viaGateId.Value)})" : "";
+                        //var transistorGateSuffix = viaGateId != null ? $" (via transistor gate {GetNodeName(viaGateId.Value)})" : "";
+                        var transistorGateSuffix = "";
                         WriteLine($"- {GetNodeName(groupNodeId)}: {groupNodeValue}{transistorGateSuffix}");
                     }
                     PopIndentLevel();

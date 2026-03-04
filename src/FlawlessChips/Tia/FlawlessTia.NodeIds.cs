@@ -2624,5 +2624,15 @@ partial class FlawlessTia
         public const NodeId N2657 = 2657;
         public const NodeId N2658 = 2658;
         public const NodeId N2659 = 2659;
+
+        public static readonly NodeBus<byte> I = new(
+        [
+            I0,
+            I1,
+            I2,
+            I3,
+            I4,
+            I5,
+        ]);
     }
 }
