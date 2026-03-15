@@ -761,7 +761,7 @@ public class ChipSimulator
 
         public void AddUnaffectedTransistor(Transistor transistor)
         {
-            //_currentRecalcNode!.UnaffectedTransistors.Add(transistor);
+            _currentRecalcNode!.UnaffectedTransistors.Add(transistor);
         }
 
         public void EndRecalcNode()
