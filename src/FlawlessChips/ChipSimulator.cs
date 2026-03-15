@@ -658,14 +658,14 @@ public class ChipSimulator
         SetNodes(bus.NodeIds, values);
     }
 
-    public void SetBusFloating<T>(NodeBus<T> bus)
+    public void SetBus<T>(NodeBus<T> bus, NodeValue value)
         where T : IUnsignedNumber<T>, IShiftOperators<T, int, T>
     {
         Span<NodeValue> values = stackalloc NodeValue[bus.NodeIds.Length];
 
         for (var i = 0; i < bus.NodeIds.Length; i++)
         {
-            values[i] = NodeValue.Floating;
+            values[i] = value;
         }
 
         SetNodes(bus.NodeIds, values);
