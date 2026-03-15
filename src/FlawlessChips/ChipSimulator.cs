@@ -576,7 +576,7 @@ public class ChipSimulator
         return result.ToString();
     }
 
-    public void SetNode(NodeId nodeId, NodeValue value, bool recalculate = true)
+    public void SetNode(NodeId nodeId, NodeValue value)
     {
         Span<NodeId> nodeIds = stackalloc NodeId[1];
         Span<NodeValue> values = stackalloc NodeValue[1];
@@ -584,13 +584,13 @@ public class ChipSimulator
         nodeIds[0] = nodeId;
         values[0] = value;
 
-        SetNodes(nodeIds, values, recalculate);
+        SetNodes(nodeIds, values);
     }
 
-    public void SetHigh(NodeId nodeId, bool recalculate = true) => SetNode(nodeId, NodeValue.PulledHigh, recalculate);
+    public void SetHigh(NodeId nodeId) => SetNode(nodeId, NodeValue.PulledHigh);
     public void SetLow(NodeId nodeId) => SetNode(nodeId, NodeValue.PulledLow);
 
-    private void SetNodes(ReadOnlySpan<NodeId> nodeIds, ReadOnlySpan<NodeValue> values, bool recalculate = true)
+    private void SetNodes(ReadOnlySpan<NodeId> nodeIds, ReadOnlySpan<NodeValue> values)
     {
         for (var i = 0; i < nodeIds.Length; i++)
         {
@@ -603,18 +603,13 @@ public class ChipSimulator
 
             ref var node = ref _nodes[nodeId];
 
+            // TODO: If it's already this value, don't do anything?
             node.Pulled = values[i];
 
-            if (recalculate)
-            {
-                _recalcListOut.Add(nodeId);
-            }
+            _recalcListOut.Add(nodeId);
         }
 
-        if (recalculate)
-        {
-            RecalcNodeList();
-        }
+        RecalcNodeList();
     }
 
     public NodeValue GetNode(NodeId nodeId) => _nodes[nodeId].State;
