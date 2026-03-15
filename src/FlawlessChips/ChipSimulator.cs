@@ -289,6 +289,7 @@ public class ChipSimulator
             // because it has some nodes that appear to be in a cycle and never settle.
             // TODO: Figure out if this is what it should actually be doing :)
             _firstTime = false;
+            _recalcListOut.Clear();
         }
         else
         {
