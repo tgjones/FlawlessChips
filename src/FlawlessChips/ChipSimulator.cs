@@ -171,15 +171,15 @@ public class ChipSimulator
 
             var splitLine = line.Split(',');
 
+            var gate = ushort.Parse(splitLine[1]);
+
             var c1 = ushort.Parse(splitLine[2]);
             var c2 = ushort.Parse(splitLine[3]);
 
             if (c1 == _nodeGnd) { c1 = c2; c2 = _nodeGnd; }
             else if (c1 == _nodePwr) { c1 = c2; c2 = _nodePwr; }
 
-            var transistorDefinition = new TransistorDefinition(
-                ushort.Parse(splitLine[1]),
-                c1, c2);
+            var transistorDefinition = new TransistorDefinition(gate, c1, c2);
 
             if (existingTransistors.Add(transistorDefinition))
             {
