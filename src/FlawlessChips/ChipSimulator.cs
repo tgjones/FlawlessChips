@@ -254,6 +254,8 @@ public class ChipSimulator
 
     private bool _firstTime = true;
 
+    protected virtual bool AllowUnsettledNodesOnFirstRecalc => false;
+
     public void RecalcNodeList()
     {
         _logger?.Begin();
@@ -283,7 +285,7 @@ public class ChipSimulator
 
         _logger?.End();
 
-        if (_firstTime)
+        if (AllowUnsettledNodesOnFirstRecalc && _firstTime)
         {
             // Allow chip not to settle on first time. This is necessary for the TIA chip,
             // because it has some nodes that appear to be in a cycle and never settle.

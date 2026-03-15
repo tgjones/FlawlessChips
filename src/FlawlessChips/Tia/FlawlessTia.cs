@@ -9,6 +9,8 @@ public sealed partial class FlawlessTia : ChipSimulator
     {
     }
 
+    protected override bool AllowUnsettledNodesOnFirstRecalc => true;
+
     protected override NodeValue GetNodeValueForAmbiguousGroup(List<NodeId> group, Node[] nodes)
     {
         var maxState = NodeValue.PulledLow;
