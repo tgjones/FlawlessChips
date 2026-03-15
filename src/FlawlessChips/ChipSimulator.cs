@@ -171,15 +171,15 @@ public class ChipSimulator
 
             var splitLine = line.Split(',');
 
+            var gate = ushort.Parse(splitLine[1]);
+
             var c1 = ushort.Parse(splitLine[2]);
             var c2 = ushort.Parse(splitLine[3]);
 
             if (c1 == _nodeGnd) { c1 = c2; c2 = _nodeGnd; }
             else if (c1 == _nodePwr) { c1 = c2; c2 = _nodePwr; }
 
-            var transistorDefinition = new TransistorDefinition(
-                ushort.Parse(splitLine[1]),
-                c1, c2);
+            var transistorDefinition = new TransistorDefinition(gate, c1, c2);
 
             if (existingTransistors.Add(transistorDefinition))
             {
@@ -254,11 +254,13 @@ public class ChipSimulator
 
     private bool _firstTime = true;
 
+    protected virtual bool AllowUnsettledNodesOnFirstRecalc => false;
+
     public void RecalcNodeList()
     {
         _logger?.Begin();
 
-        for (var j = 0; j < 100; j++) // Prevent infinite loops
+        for (var j = 0; j < 400; j++) // Prevent infinite loops
         {
             (_recalcListOut, _recalcListIn) = (_recalcListIn, _recalcListOut);
 
@@ -283,12 +285,13 @@ public class ChipSimulator
 
         _logger?.End();
 
-        if (_firstTime)
+        if (AllowUnsettledNodesOnFirstRecalc && _firstTime)
         {
             // Allow chip not to settle on first time. This is necessary for the TIA chip,
             // because it has some nodes that appear to be in a cycle and never settle.
             // TODO: Figure out if this is what it should actually be doing :)
             _firstTime = false;
+            _recalcListOut.Clear();
         }
         else
         {
@@ -422,13 +425,11 @@ public class ChipSimulator
         {
             _groupState |= GroupState.ContainsPullup;
         }
-
-        if (node.Pulled == NodeValue.PulledLow)
+        else if (node.Pulled == NodeValue.PulledLow)
         {
             _groupState |= GroupState.ContainsPulldown;
         }
-
-        if (node.State == NodeValue.PulledHigh)
+        else if (node.State == NodeValue.PulledHigh)
         {
             _groupState |= GroupState.ContainsHi;
         }
@@ -604,6 +605,11 @@ public class ChipSimulator
 
             ref var node = ref _nodes[nodeId];
 
+            if (node.Pulled == values[i])
+            {
+                continue;
+            }
+
             node.Pulled = values[i];
 
             _recalcListOut.Add(nodeId);
@@ -654,14 +660,14 @@ public class ChipSimulator
         SetNodes(bus.NodeIds, values);
     }
 
-    public void SetBusFloating<T>(NodeBus<T> bus)
+    public void SetBus<T>(NodeBus<T> bus, NodeValue value)
         where T : IUnsignedNumber<T>, IShiftOperators<T, int, T>
     {
         Span<NodeValue> values = stackalloc NodeValue[bus.NodeIds.Length];
 
         for (var i = 0; i < bus.NodeIds.Length; i++)
         {
-            values[i] = NodeValue.Floating;
+            values[i] = value;
         }
 
         SetNodes(bus.NodeIds, values);

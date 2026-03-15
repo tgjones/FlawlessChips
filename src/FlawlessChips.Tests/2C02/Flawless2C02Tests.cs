@@ -118,7 +118,7 @@ public class Flawless2C02Tests
                 else
                 {
                     _counter = _current & 0x7FF;
-                    _chip.SetBusFloating(io_db);
+                    _chip.SetBus(io_db, NodeValue.Floating);
                 }
             }
             if (_counter > 0)
@@ -132,7 +132,7 @@ public class Flawless2C02Tests
                     _chip.SetBus(io_ab, a);
                     if (rw)
                     {
-                        _chip.SetBusFloating(io_db);
+                        _chip.SetBus(io_db, NodeValue.Floating);
                     }
                     else
                     {

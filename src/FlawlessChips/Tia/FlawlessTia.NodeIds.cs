@@ -2624,5 +2624,51 @@ partial class FlawlessTia
         public const NodeId N2657 = 2657;
         public const NodeId N2658 = 2658;
         public const NodeId N2659 = 2659;
+
+        public static readonly NodeBus<byte> AB = new(
+        [
+            AB0,
+            AB1,
+            AB2,
+            AB3,
+            AB4,
+            AB5,
+        ]);
+
+        public static readonly NodeBus<byte> DB = new(
+        [
+            DB0,
+            DB1,
+            DB2,
+            DB3,
+            DB4,
+            DB5,
+            DB6,
+            DB7,
+        ]);
+
+        public static readonly NodeBus<byte> DBDrivers = new(
+        [
+            DB6_drvLo,
+            DB6_drvHi,
+            DB7_drvLo,
+            DB7_drvHi,
+        ]);
+
+        public static readonly NodeBus<byte> I = new(
+        [
+            I0,
+            I1,
+            I2,
+            I3,
+            I4,
+            I5,
+        ]);
+
+        public static readonly NodeBus<byte> CS0CS3 = new(
+        [
+            CS0,
+            CS3,
+        ]);
     }
 }
