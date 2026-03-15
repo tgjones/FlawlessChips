@@ -7,8 +7,6 @@ public class FlawlessTiaTests
     {
         var chip = new FlawlessTia();
 
-        using var _ = chip.BeginLogging("TIA_FlawlessChips.txt");
-
         chip.Startup();
 
         // This state was retrieved from Sim2600 by running the equivalent simulation.
