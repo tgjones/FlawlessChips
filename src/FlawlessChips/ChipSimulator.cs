@@ -840,8 +840,7 @@ public class ChipSimulator
                     PushIndentLevel();
                     foreach (var (groupNodeId, viaGateId, groupNodeValue) in recalcNode.Group)
                     {
-                        //var transistorGateSuffix = viaGateId != null ? $" (via transistor gate {GetNodeName(viaGateId.Value)})" : "";
-                        var transistorGateSuffix = "";
+                        var transistorGateSuffix = viaGateId != null ? $" (via transistor gate {GetNodeName(viaGateId.Value)})" : "";
                         WriteLine($"- {GetNodeName(groupNodeId)}: {groupNodeValue}{transistorGateSuffix}");
                     }
                     PopIndentLevel();
