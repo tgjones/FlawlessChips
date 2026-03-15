@@ -603,7 +603,11 @@ public class ChipSimulator
 
             ref var node = ref _nodes[nodeId];
 
-            // TODO: If it's already this value, don't do anything?
+            if (node.Pulled == values[i])
+            {
+                continue;
+            }
+
             node.Pulled = values[i];
 
             _recalcListOut.Add(nodeId);
